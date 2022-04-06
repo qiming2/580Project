@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <time.h>
-#include <cmath>
+#include <math.h>
 #include "580math.hpp"
 #include "Camera.hpp"
 #include "Tracer.hpp"

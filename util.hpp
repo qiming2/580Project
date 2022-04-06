@@ -22,7 +22,7 @@ namespace KT {
 
 	template<typename T, typename... Args>
 	void printOneLine(T&& t, Args&&... args) {
-		std::cout << " " << t;©
+		std::cout << " " << t;
 		printOneLine(args...);
 	}
 
