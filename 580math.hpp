@@ -18,6 +18,7 @@ namespace KT {
 			};
 			float data[3];
 		};
+		vec3(float v): m_x(v), m_y(v), m_z(v) {}
 		vec3():m_x(0.0f), m_y(0.0f), m_z(0.0f) {}
 		vec3(float x, float y, float z):
 			m_x(x), m_y(y), m_z(z)
@@ -261,4 +262,14 @@ namespace KT {
 			return out;
 		}
 	};
+
+	inline double random_double() {
+		// returns a random real in [0, 1)
+		return rand() / (RAND_MAX + 1.0);
+	}
+
+	inline double random_double(double dmin, double dmax) {
+		// returns a random real in [dmin, dmax]
+		return dmin + (dmax - dmin) * random_double();
+	}
 }

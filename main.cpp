@@ -23,6 +23,10 @@ const static float B = -1.0f;
 const static float T = 1.0f;
 const static float vfov = 45.0f / 180.0f * M_PI;
 const static float near = 1.0f / tan(vfov / 2.0); // make vertical fov 45 degree
+
+// AA param
+const static size_t samples_per_pixel = 20;
+
 static KT::Camera c(Width, Height);
 vec3 globalDir;
 int main() {
@@ -140,15 +144,22 @@ int main() {
 	start = clock();
 	for (size_t y = 0; y < Height; ++y) {
 		for (size_t x = 0; x < Width; ++x) {
+      output_color = vec3(0.0f);
 
-			u_coord = L + ((R - L) * (float)(0.5 +  x)) / Width;
-			v_coord = T - ((T - B) * (float)(0.5 +  y)) / Height;
-			cur_ray.m_d = -near * w + u_coord * u + v_coord * v;
-			cur_ray.m_d.normalize();
-			// Shading inside
-			record = surf_man.intersection(cur_ray, 0, 3, c);
-			if (record.m_surf) {
-				output_color = record.m_color;
+      // Antialiasing
+      for (size_t s = 0; s < samples_per_pixel; ++s) {
+        u_coord = L + ((R - L) * (float)(random_double() +  x)) / Width;
+  			v_coord = T - ((T - B) * (float)(random_double() +  y)) / Height;
+  			cur_ray.m_d = -near * w + u_coord * u + v_coord * v;
+  			cur_ray.m_d.normalize();
+  			// Shading inside
+  			record = surf_man.intersection(cur_ray, 0, 3, c);
+  			if (record.m_surf) {
+  				output_color += record.m_color*(1.0f/(float)samples_per_pixel);
+        } else {
+          output_color += background*(1.0f/(float)samples_per_pixel);
+        }
+
 				//print(output_color);
 				// Note: y * Width * 3 since we have width * 3 floats in a row!
 				index = y * Width * 3 + x * 3;
