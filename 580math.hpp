@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
-#include "util.h"
+#include "util.hpp"
 #define EPSILON 0.0001f
 #define HIT_EPSILON 0.01f
 
