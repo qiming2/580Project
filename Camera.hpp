@@ -5,16 +5,18 @@
 namespace KT {
 	class Camera {
 	public:
-		mat4 m_frame;
-		float m_width;
-		float m_height;
-		Camera(const mat4& frame, float width, float height);
+		Camera(vec3 origin, vec3 lookat, vec3 up, float vfov, float aspect_ratio, float aperture, float focus_dist);
 
-		Camera(float width, float height);
-
-		void setPos(const vec3& pos);
-
+		ray getRay(float u, float v);
 		friend std::ostream& operator<<(std::ostream& out, const KT::Camera& camera);
+
+	private:
+		vec3 origin;
+		vec3 lower_left;
+		vec3 horizontal;
+		vec3 vertical;
+		float lens_radius;
+		vec3 u, v, w;
 	};
 	std::ostream& operator<<(std::ostream& out, const KT::Camera& camera);
 }

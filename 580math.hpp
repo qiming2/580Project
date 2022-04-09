@@ -3,11 +3,24 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <memory>
 #include "util.hpp"
 #define EPSILON 0.0001f
+#define SINE_EPSILON 0.2f
 #define HIT_EPSILON 0.01f
 
+#define DTOR(x) ((x) / 180.0f * M_PI)
+
 namespace KT {
+	inline double random_double() {
+		// returns a random real in [0, 1)
+		return rand() / (RAND_MAX + 1.0);
+	}
+
+	inline double random_double(double dmin, double dmax) {
+		// returns a random real in [dmin, dmax]
+		return dmin + (dmax - dmin) * random_double();
+	}
 	struct vec3
 	{
 		union {
@@ -43,9 +56,21 @@ namespace KT {
 		float len() const {
 			return sqrtf(m_x * m_x + m_y * m_y + m_z * m_z);
 		}
+
+		float len_squared() const { 
+			return m_x * m_x + m_y * m_y + m_z * m_z;
+		}
+
 		vec3 operator-() const {
 			return vec3(-m_x, -m_y, -m_z);
 		}
+
+		void operator=(const vec3& v) {
+			m_x = v.m_x;
+			m_y = v.m_y;
+			m_z = v.m_z;
+		}
+
 		vec3 operator*(const vec3& other) const {
 			return vec3(m_x * other.m_x, m_y * other.m_y, m_z * other.m_z);
 		}
@@ -68,7 +93,50 @@ namespace KT {
 			return vec3(m_x * s, m_y * s, m_z * s);
 		}
 
+		vec3 operator/(float s) const {
+			return vec3(m_x / s, m_y / s, m_z / s);
+		}
 
+		bool near_zero() {
+			const static float ep = 1e-8;
+			return (fabs(m_x) < ep) && (fabs(m_y) < ep) && (fabs(m_z) < ep);
+		}
+
+		inline static vec3 random() {
+			return vec3(random_double(), random_double(), random_double());
+		}
+
+		inline static vec3 random(double dmin, double dmax) {
+			return vec3(random_double(dmin, dmax), random_double(dmin, dmax), random_double(dmin, dmax));
+		}
+
+		// rejection method 
+		inline static vec3 random_unit_sphere() {
+			while (true) {
+				vec3 generated = random(-1.0, 1.0);
+				if (generated.len_squared() > 1.0f - EPSILON) {
+					continue;
+				}
+				return generated;
+			}
+		}
+
+		// rejection method 
+		inline static vec3 random_unit_disk() {
+			while (true) {
+				vec3 generated = vec3(random_double(-1.0f, 1.0f), random_double(-1.0f, 1.0f), 0.0f);
+				if (generated.len_squared() > 1.0f - EPSILON) {
+					continue;
+				}
+				return generated;
+			}
+		}
+
+		inline static vec3 random_unit_vec3() {
+			vec3 ret = random_unit_sphere();
+			ret.normalize();
+			return ret;
+		}
 
 		friend vec3 normalize(const vec3& v) {
 			vec3 ret = v;
@@ -85,7 +153,19 @@ namespace KT {
 			return out;
 		}
 	};
+	inline float dot(const vec3& v1, const vec3& v2) {
+		return v1.m_x * v2.m_x + v1.m_y * v2.m_y + v1.m_z * v2.m_z;
+	}
+	inline vec3 reflect(const vec3& v1, const vec3& n) {
+		return v1 - 2 * dot(v1, n) * n;
+	}
 
+	inline vec3 refract(vec3 v, vec3 n, const float& indexin_over_indexout) {
+		float cos_theta = fmin(dot(-v, n), 1.0f);
+		vec3 out_perp = indexin_over_indexout * (v + cos_theta * n);
+		vec3 out_parp = -sqrt(fabs(1.0 - out_perp.len_squared())) * n;
+		return out_perp + out_parp;
+	}
 
 	struct vec4
 	{
@@ -263,13 +343,4 @@ namespace KT {
 		}
 	};
 
-	inline double random_double() {
-		// returns a random real in [0, 1)
-		return rand() / (RAND_MAX + 1.0);
-	}
-
-	inline double random_double(double dmin, double dmax) {
-		// returns a random real in [dmin, dmax]
-		return dmin + (dmax - dmin) * random_double();
-	}
 }

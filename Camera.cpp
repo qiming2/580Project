@@ -1,30 +1,37 @@
+#define _USE_MATH_DEFINES
 #include <iostream>
 #include "Camera.hpp"
 
-KT::Camera::Camera(float width, float height) :
-	m_width(width), m_height(height)
-{
 
-}
-
-KT::Camera::Camera(const mat4& frame, float width, float height) :
-	m_frame(frame), m_width(width), m_height(height)
-{
-
-}
-
-void KT::Camera::setPos(const vec3& pos)
-{
-	m_frame.setPos(pos);
-}
-
-
-//void KT::doSomething(const Camera& camera) {
-//	camera.can;
-//}
 
 std::ostream& KT::operator<<(std::ostream& out, const KT::Camera& camera)
 {
-	out << camera.m_frame << " Width: " << camera.m_width << " Height: " << camera.m_height;
+	
 	return out;
+}
+
+KT::Camera::Camera(vec3 origin, vec3 lookat, vec3 up, float vfov, float aspect_ratio, float aperture, float focus_dist)
+{
+	float theta = DTOR(vfov);
+	float h = tan(theta / 2.0f);
+	float viewport_height = 2 * h;
+	float viewport_width = viewport_height * aspect_ratio;
+
+	this->origin = origin;
+	w = normalize(lookat - origin);
+	u = normalize(w.cross(up));
+	v = normalize(u.cross(w));
+	horizontal = focus_dist * viewport_width * u;
+	vertical = focus_dist * viewport_height * v;
+	lower_left = origin - horizontal / 2.0f - vertical / 2.0f + w * focus_dist;
+	lens_radius = aperture / 2.0f;
+}
+
+KT::ray KT::Camera::getRay(float s, float t)
+{
+	vec3 rd = lens_radius * vec3::random_unit_disk();
+	vec3 offset = u * rd.m_x + v * rd.m_y;
+	KT::ray ret(origin + offset, lower_left + s * horizontal + t * vertical - origin - offset);
+	ret.m_d.normalize();
+	return ret;
 }

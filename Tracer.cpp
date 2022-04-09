@@ -19,6 +19,7 @@ KT::Record::Record(Surface* surf, float t) : m_surf(surf), m_t(t)
 KT::Record KT::Sphere::intersection(const ray& r) const
 {
 	Record record;
+	record.mat_ptr = mat_ptr;
 	vec3 e_minus_c = r.m_o - m_o;
 	float d_dot_d = r.m_d.dot(r.m_d);
 	float e_dot_d = r.m_d.dot(e_minus_c);
@@ -36,8 +37,8 @@ KT::Record KT::Sphere::intersection(const ray& r) const
 
 		point = r.eval(t1);
 
-		record.m_normal = point - m_o;
-		record.m_normal.normalize();
+		record.m_normal = (point - m_o) / m_r;
+		record.set_face_normal(r, record.m_normal);
 		//println(record.m_normal);
 		return record;
 	}
@@ -49,8 +50,8 @@ KT::Record KT::Sphere::intersection(const ray& r) const
 
 		point = r.eval(t2);
 
-		record.m_normal = point - m_o;
-		record.m_normal.normalize();
+		record.m_normal = (point - m_o) / m_r;
+		record.set_face_normal(r, record.m_normal);
 		return record;
 	}
 
@@ -69,15 +70,69 @@ KT::SurfaceManager& KT::SurfaceManager::getInstance()
 	return instance;
 }
 
-void KT::SurfaceManager::Add(Surface& surf)
+void KT::SurfaceManager::Add(std::shared_ptr<Surface> surf)
 {
-	surfaces.push_back(&surf);
+	surfaces.push_back(surf);
+}
+
+void KT::SurfaceManager::make_random_scene()
+{
+	using namespace std;
+	using namespace KT;
+	using color = vec3;
+	using point3 = vec3;
+	surfaces.clear();
+
+
+	auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+	Add(make_shared<Sphere>(point3(0, -1000, 0), 1000, ground_material));
+
+
+	for (int a = -1; a < 1; a++) {
+		for (int b = -1; b < 1; b++) {
+			auto choose_mat = random_double();
+			point3 center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
+
+			if ((center - point3(4, 0.2, 0)).len() > 0.9) {
+				shared_ptr<material> sphere_material;
+
+				if (choose_mat < 0.8) {
+					// diffuse
+					auto albedo = color::random() * color::random();
+					sphere_material = make_shared<lambertian>(albedo);
+					Add(make_shared<Sphere>(center, 0.2, sphere_material));
+				}
+				else if (choose_mat < 0.95) {
+					// metal
+					auto albedo = color::random(0.5, 1);
+					auto fuzz = random_double(0, 0.5);
+					sphere_material = make_shared<metal>(albedo, fuzz);
+					Add(make_shared<Sphere>(center, 0.2, sphere_material));
+				}
+				else {
+					// glass
+					sphere_material = make_shared<dielectric>(1.5);
+					Add(make_shared<Sphere>(center, 0.2, sphere_material));
+				}
+			}
+		}
+	}
+
+	auto material1 = make_shared<dielectric>(1.5);
+	Add(make_shared<Sphere>(point3(0, 1, 0), 1.0, material1));
+
+	auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
+	Add(make_shared<Sphere>(point3(-4, 1, 0), 1.0, material2));
+
+	auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+	Add(make_shared<Sphere>(point3(4, 1, 0), 1.0, material3));
 }
 
 extern KT::vec3 globalDir;
 KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t max_level, const Camera& c)
 {
 	Record ret;
+	ret.m_color = vec3(0.0f);
 	if (level == max_level) return ret;
 
 
@@ -91,15 +146,15 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 	}
 	// Add a directional light
 	//const static vec3 color = vec3(rand() % 100 / 100.0f / 2.0f + 0.5f, 0.7f, rand() % 100 / 100.0f);
-	const static vec3 color = vec3(1.0f, 0.64f, 0.84f);
+	/*const static vec3 color = vec3(1.0f, 0.64f, 0.84f);
 	static bool printOnceColor = false;
 	if (!printOnceColor) {
 		print("Random color: ", color);
 		printOnceColor = true;
-	}
+	}*/
 
 	//const static vec3 lightDir = normalize(vec3(-0.5f, 0.3f, -0.5f));
-	const static vec3 lightDir = normalize(globalDir);
+	/*const static vec3 lightDir = normalize(globalDir);
 	const static vec3 lightColor = vec3(0.7f, 0.7f, 0.7f);
 	const static vec3 ambientColor = vec3(0.2f, 0.2f, 0.2f);
 	const static float shinness = 32.0f;
@@ -108,32 +163,50 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 	vec3 halfDir;
 	float dotH;
 	float dotHN;
-	float shadow;
+	float shadow;*/
 	if (ret.m_surf) {
-		// 3. Shading (flat shading without light first -> phong shading -> pbr)
-		hitPoint = r.eval(ret.m_t);
+		//// 3. Shading (flat shading without light first -> phong shading -> pbr)
+		//hitPoint = r.eval(ret.m_t);
 
-		// Shadow Casting
+		//// Shadow Casting
 
-		shadow = castShadow(hitPoint, lightDir);
-		dotH = std::max(ret.m_normal.dot(-lightDir), 0.0f);
+		//shadow = castShadow(hitPoint, lightDir);
+		//dotH = std::max(ret.m_normal.dot(-lightDir), 0.0f);
 
-		// phong shading
-		// ambient + diffuse + specular
-		(halfDir = (-lightDir) + (c.m_frame.getPos() - normalize(hitPoint))).normalize();
-		dotHN = std::max(halfDir.dot(ret.m_normal), 0.0f);
-		output_color = ambientColor * color;
-		output_color += (dotH * color * lightColor + pow(dotHN, shinness) * lightColor * color) * (1.0f - shadow);
+		//// phong shading
+		//// ambient + diffuse + specular
+		//(halfDir = (-lightDir) + (c.m_frame.getPos() - normalize(hitPoint))).normalize();
+		//dotHN = std::max(halfDir.dot(ret.m_normal), 0.0f);
+		//output_color = ambientColor * color;
+		//output_color += (dotH * color * lightColor + pow(dotHN, shinness) * lightColor * color) * (1.0f - shadow);
 
-		ret.m_color = output_color;
+		//ret.m_color = output_color;
 
-		// If hit something, we do a reflection
-		ray reflect_ray;
-		reflect_ray.m_o = hitPoint;
-		reflect_ray.m_d = r.m_d + 2 * (-r.m_d.dot(ret.m_normal)) * ret.m_normal;
-		// TODO Store some sort of material
-		ret.m_color += 0.3 * intersection(reflect_ray, level + 1, max_level, c).m_color;
+		//// If hit something, we do a reflection
+		//ray reflect_ray;
+		//reflect_ray.m_o = hitPoint;
+		//reflect_ray.m_d = r.m_d + 2 * (-r.m_d.dot(ret.m_normal)) * ret.m_normal;
+		//// TODO Store some sort of material
+		////ret.m_color += 0.3 * intersection(reflect_ray, level + 1, max_level, c).m_color;
+
+		
+		ray scattered;
+		vec3 attenuation;
+		if (ret.mat_ptr->scatter(r, ret, attenuation, scattered)) {
+			ret.m_color = attenuation * intersection(scattered, level + 1, max_level, c).m_color;
+			return ret;
+		}
+		
+	
+		ret.m_color = vec3(0.0f);
+		return ret;
 	}
+	
+	// background color
+	vec3 unitDir = normalize(r.m_d);
+	float t = 0.5f * (unitDir.m_y + 1.0f);
+	ret.m_color = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
+
 	return ret;
 }
 
