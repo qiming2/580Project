@@ -14,16 +14,8 @@ using namespace std;
 
 
 const char* welcomeSen = "This is a ray tracer developed from scratch";
-const static int Height = 1024;
-const static int Width = 1024;
-const static float L = -1.0f;
-const static float R = 1.0f;
-const static float B = -1.0f;
-const static float T = 1.0f;
-const static float vfov = 45.0f / 180.0f * M_PI;
-const static float near = 1.0f / tan(vfov / 2.0); // make vertical fov 45 degree
 
-//////////////////////////////////// rewrite generate rays ////////////////////////
+//////////////////////////////////// params ////////////////////////
 
 // image param
 const float aspect_ratio = 3.0f / 2.0f;
@@ -56,39 +48,26 @@ int main() {
 
 	// set seed based on time
 	srand(time(NULL));
-	// TODO:
+
 	// 0. Camera
 
 	// 1. Generating rays (Only implementing Perspective, orthogonal would be easy if finished perspective)
 	vec3 background(0.5, 0.7, 1.0);
 	size_t index = 0;
 	float r, g, b;
-	float* image = new float[Height * Width * 3];
+	float* image = new float[image_height *image_width * 3];
 	float t;
 	vec3 color;
-	for (size_t y = 0; y < Height; ++y) {
-		for (size_t x = 0; x < Width; ++x) {
-			index = y * Width * 3 + x * 3;
-			t = (float)(Height - y) / Height;
+	for (size_t y = 0; y < image_height; ++y) {
+		for (size_t x = 0; x < image_width; ++x) {
+			index = y * image_width * 3 + x * 3;
+			t = (float)(image_height - y) / image_height;
 			color = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * background;
 			image[index] =     sqrtf(color.m_x);
 			image[index + 1] = sqrtf(color.m_y);
 			image[index + 2] = sqrtf(color.m_z);
 		}
 	}
-	// ray.m_o = cam pos
-	// ray.m_d = u* cam u + v * cam v + -w * cam w
-	// w is the distance from cam pos to the center of near plane
-	/*KT::ray cur_ray;
-	cur_ray.m_o = c.m_frame.getPos();
-	vec3 u = c.m_frame.getU();
-	vec3 v = c.m_frame.getV();
-	vec3 w = c.m_frame.getW();
-	print(c);
-	float u_coord;
-	float v_coord;*/
-
-	//Test first ray
 
 
 	// 2. Generating objects (sphere as the most simplistic object to do the intersection test)
@@ -120,44 +99,6 @@ int main() {
 	auto aperture = 0.1f;
 	Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
-
-
-	
-	//surf_man.Add(s2);
-	//surf_man.Add(s3);
-	//surf_man.Add(s4);
-
-	/*KT::Triangle tri1;
-	tri1.m_a = vec3(-5.0f,- 1.0f, -5.0f);
-	tri1.m_b = vec3( 5.0f, -1.0f,  5.0f);
-	tri1.m_c = vec3( 5.0f, -1.0f, -5.0f);
-	surf_man.Add(tri1);
-	KT::Triangle tri2;
-	tri2.m_a = vec3( 10.f,  -1.0f,  10.0f);
-	tri2.m_b = vec3(-10.f,  -1.0f, -10.0f);
-	tri2.m_c = vec3(-10.f,  -1.0f,  10.0f);
-	surf_man.Add(tri2);*/
-	/*const static vec3 color = vec3(rand() % 100 / 100.0f / 2.0f + 0.5f, 0.3f, rand() % 100 / 100.0f);*/
-
-
-	//globalDir = vec3(0.5f, -1.0f, -1.0f);
-	//static size_t cnt = 0;
-	//
-	//vec3 hitPoint;
-
-
-	//
-	//// Add a directional light
-	//static vec3 lightDir = vec3(0.5f, -0.5f, -0.5f);
-	//lightDir.normalize();
-	//lightDir = -lightDir;
-	//const static vec3 lightColor = vec3(0.7f, 0.7f, 0.7f);
-	//const static vec3 ambientColor = vec3(0.1f, 0.1f, 0.1f);
-	//float dotH;
-
-	//const static float shinness = 32.0f;
-	//vec3 halfDir;
-	//float dotHN;
 	Record record;
 	vec3 output_color;
 	clock_t start, stop;
@@ -166,9 +107,6 @@ int main() {
 		for (size_t x = 0; x < image_width; ++x) {
       output_color = vec3(0.0f);
 	  
-	  // progress bar
-	  
-	  //std::cerr << "Progress: " << y * image_width + x+1 << " out of " << image_height * image_width << std::flush;
       // Antialiasing
       for (size_t s = 0; s < samples_per_pixel; ++s) {
 		  ray cur_ray;
