@@ -77,16 +77,17 @@ int main() {
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
 	
 	//surf_man.make_random_scene();
-	auto material1 = make_shared<dielectric>(1.5);
+	shared_ptr<material> material1 = make_shared<dielectric>(1.5);
 	surf_man.Add(make_shared<Sphere>(vec3(0, 1, 0), 1.0, material1));
 	std::shared_ptr<texture> m2_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
+
 	auto material2 = make_shared<lambertian>(m2_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
 
 	auto material3 = make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0);
 	surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
 
-	auto checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+	shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
 	surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
 	//////////////////////////////// Test Scene End /////////////////
