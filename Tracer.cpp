@@ -1,5 +1,10 @@
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include "Tracer.hpp"
 #include "util.hpp"
+#include "texture.h"
+
+
 
 KT::Record::Record(Surface* surf, const vec3& norm, float t) :m_surf(surf), m_normal(norm), m_t(t)
 {
@@ -14,6 +19,14 @@ KT::Record::Record():m_t(std::numeric_limits<float>::infinity())
 KT::Record::Record(Surface* surf, float t) : m_surf(surf), m_t(t)
 {
 
+}
+
+void KT::Sphere::getUV(const KT::vec3& p, float& u, float& v) {
+	float theta = acos(-p.m_y);
+	float phi = atan2(-p.m_z, p.m_x) + M_PI;
+	
+	u = phi / (2 * M_PI);
+	v = theta / M_PI;
 }
 
 KT::Record KT::Sphere::intersection(const ray& r) const
@@ -36,9 +49,10 @@ KT::Record KT::Sphere::intersection(const ray& r) const
 		record.m_t = t1;
 
 		point = r.eval(t1);
-
+		
 		record.m_normal = (point - m_o) / m_r;
 		record.set_face_normal(r, record.m_normal);
+		Sphere::getUV(record.m_normal, record.u, record.v);
 		//println(record.m_normal);
 		return record;
 	}
@@ -52,6 +66,7 @@ KT::Record KT::Sphere::intersection(const ray& r) const
 
 		record.m_normal = (point - m_o) / m_r;
 		record.set_face_normal(r, record.m_normal);
+		Sphere::getUV(record.m_normal, record.u, record.v);
 		return record;
 	}
 
@@ -83,8 +98,8 @@ void KT::SurfaceManager::make_random_scene()
 	using point3 = vec3;
 	surfaces.clear();
 
-
-	auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+	std::shared_ptr<texture> ground = make_shared<solid_color>(color(0.5, 0.5, 0.5));
+	auto ground_material = make_shared<lambertian>(ground);
 	Add(make_shared<Sphere>(point3(0, -1000, 0), 1000, ground_material));
 
 
@@ -99,7 +114,9 @@ void KT::SurfaceManager::make_random_scene()
 				if (choose_mat < 0.8) {
 					// diffuse
 					auto albedo = color::random() * color::random();
-					sphere_material = make_shared<lambertian>(albedo);
+					std::shared_ptr<texture> plain_tex = make_shared<solid_color>(albedo);
+					
+					sphere_material = make_shared<lambertian>(plain_tex);
 					Add(make_shared<Sphere>(center, 0.2, sphere_material));
 				}
 				else if (choose_mat < 0.95) {
@@ -120,8 +137,8 @@ void KT::SurfaceManager::make_random_scene()
 
 	auto material1 = make_shared<dielectric>(1.5);
 	Add(make_shared<Sphere>(point3(0, 1, 0), 1.0, material1));
-
-	auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
+	std::shared_ptr<texture> m2_tex = make_shared<solid_color>(color(0.4, 0.2, 0.1));
+	auto material2 = make_shared<lambertian>(m2_tex);
 	Add(make_shared<Sphere>(point3(-4, 1, 0), 1.0, material2));
 
 	auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
@@ -144,52 +161,8 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 			ret = record;
 		}
 	}
-	// Add a directional light
-	//const static vec3 color = vec3(rand() % 100 / 100.0f / 2.0f + 0.5f, 0.7f, rand() % 100 / 100.0f);
-	/*const static vec3 color = vec3(1.0f, 0.64f, 0.84f);
-	static bool printOnceColor = false;
-	if (!printOnceColor) {
-		print("Random color: ", color);
-		printOnceColor = true;
-	}*/
 
-	//const static vec3 lightDir = normalize(vec3(-0.5f, 0.3f, -0.5f));
-	/*const static vec3 lightDir = normalize(globalDir);
-	const static vec3 lightColor = vec3(0.7f, 0.7f, 0.7f);
-	const static vec3 ambientColor = vec3(0.2f, 0.2f, 0.2f);
-	const static float shinness = 32.0f;
-	vec3 output_color;
-	vec3 hitPoint;
-	vec3 halfDir;
-	float dotH;
-	float dotHN;
-	float shadow;*/
 	if (ret.m_surf) {
-		//// 3. Shading (flat shading without light first -> phong shading -> pbr)
-		//hitPoint = r.eval(ret.m_t);
-
-		//// Shadow Casting
-
-		//shadow = castShadow(hitPoint, lightDir);
-		//dotH = std::max(ret.m_normal.dot(-lightDir), 0.0f);
-
-		//// phong shading
-		//// ambient + diffuse + specular
-		//(halfDir = (-lightDir) + (c.m_frame.getPos() - normalize(hitPoint))).normalize();
-		//dotHN = std::max(halfDir.dot(ret.m_normal), 0.0f);
-		//output_color = ambientColor * color;
-		//output_color += (dotH * color * lightColor + pow(dotHN, shinness) * lightColor * color) * (1.0f - shadow);
-
-		//ret.m_color = output_color;
-
-		//// If hit something, we do a reflection
-		//ray reflect_ray;
-		//reflect_ray.m_o = hitPoint;
-		//reflect_ray.m_d = r.m_d + 2 * (-r.m_d.dot(ret.m_normal)) * ret.m_normal;
-		//// TODO Store some sort of material
-		////ret.m_color += 0.3 * intersection(reflect_ray, level + 1, max_level, c).m_color;
-
-		
 		ray scattered;
 		vec3 attenuation;
 		if (ret.mat_ptr->scatter(r, ret, attenuation, scattered)) {
@@ -208,19 +181,6 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 	ret.m_color = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
 
 	return ret;
-}
-
-// TODO: Change lightDir to maybe light info
-float KT::SurfaceManager::castShadow(const vec3& point, const vec3& lightDir) const
-{
-	const ray shadowRay(point, normalize(-lightDir));
-	for (size_t i = 0; i < surfaces.size(); ++i) {
-		if (surfaces[i]->intersection(shadowRay).m_surf) {
-			//print("enter?");
-			return 1.0f;
-		}
-	}
-	return 0.0f;
 }
 
 KT::SurfaceManager::SurfaceManager()

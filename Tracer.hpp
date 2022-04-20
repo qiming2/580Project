@@ -11,6 +11,8 @@ namespace KT {
 	public:
 		vec3 m_color;
 		vec3 m_normal;
+		float u;
+		float v;
 		const Surface* m_surf = nullptr;
 		float m_t = std::numeric_limits<float>::infinity();
 		std::shared_ptr<material> mat_ptr;
@@ -25,6 +27,7 @@ namespace KT {
 			front_face = dot(r.m_d, outward_normal) < 0.0f;
 			m_normal = front_face ? outward_normal : -outward_normal;
 		}
+		
 		friend std::ostream& operator<<(std::ostream& out, const Record& s);
 	};
 	std::ostream& operator<<(std::ostream& out, const Record& s);
@@ -38,12 +41,15 @@ namespace KT {
 	public:
 		Sphere() {};
 		Sphere(const vec3& o, const float& r, std::shared_ptr<material> mat) : m_o(o), m_r(r), mat_ptr(mat) {}
-		vec3 m_o; // origin
-		float m_r;
+		
 		std::shared_ptr<material> mat_ptr;
 		virtual Record intersection(const ray& r) const override;
-
+		
 		friend std::ostream& operator<<(std::ostream& out, const Sphere& s);
+		static void getUV(const vec3& point, float& u, float& v);
+	public:
+		vec3 m_o; // origin
+		float m_r;
 	};
 	std::ostream& operator<<(std::ostream& out, const Sphere& s);
 

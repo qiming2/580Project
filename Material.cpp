@@ -12,7 +12,7 @@ namespace KT{
 		}
 
 		scattered = ray(hitpoint, scatter_dir);
-		attenuation = albedo;
+		attenuation = albedo->getColor(rec.u, rec.v, hitpoint);
 		return true;
 	}
 

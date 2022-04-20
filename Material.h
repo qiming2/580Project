@@ -1,5 +1,6 @@
 #pragma once
 #include "580math.hpp"
+#include "texture.h"
 // material class holding related params
 
 namespace KT {
@@ -12,11 +13,11 @@ namespace KT {
 
 	class lambertian : public material {
 	public:
-		lambertian(const vec3& color) : albedo(color) {}
+		lambertian(const std::shared_ptr<texture> tex) : albedo(tex) {}
 
 		virtual bool scatter(const ray& r, const Record& rec, vec3& attenuation, ray& scattered) const override;
 	public:
-		vec3 albedo;
+		std::shared_ptr<texture> albedo;
 	};
 
 	class metal : public material {

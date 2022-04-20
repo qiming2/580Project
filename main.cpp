@@ -44,7 +44,7 @@ size_t max_depth = 20;
 
 
 // AA param
-const static size_t samples_per_pixel = 20;
+const static size_t samples_per_pixel = 5;
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -53,14 +53,6 @@ vec3 globalDir;
 int main() {
 	println("Welcome to KTracer Engine");
 	println(welcomeSen);
-	//print(near);
-	// Simple math library
-	/*KT::vec3 temp = 3 * vec3(1.0, 2.0, 3);
-	KT::vec4 temp1 = KT::vec4(1.0, 2.0, 3, 2.3) * KT::vec4(1.3, 2.5, 4.0, 2);
-	KT::ray r;
-	KT::mat4 temp3;
-	println(temp3);
-	println(temp, temp1, r);*/
 
 	// set seed based on time
 	srand(time(NULL));
@@ -100,11 +92,26 @@ int main() {
 
 
 	// 2. Generating objects (sphere as the most simplistic object to do the intersection test)
-	// Hard code two spheres for testing intersections with SurfaceManager
+
+	//////////////////////////////// Test Scene End /////////////////
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
 	
-	surf_man.make_random_scene();
+	//surf_man.make_random_scene();
+	auto material1 = make_shared<dielectric>(1.5);
+	surf_man.Add(make_shared<Sphere>(vec3(0, 1, 0), 1.0, material1));
+	std::shared_ptr<texture> m2_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
+	auto material2 = make_shared<lambertian>(m2_tex);
+	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
+
+	auto material3 = make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0);
+	surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
+
+	auto checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+	surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
+
+	//////////////////////////////// Test Scene End /////////////////
+
 
 	vec3 lookfrom(13, 2, 3);
 	vec3 lookat(0, 0, 0);
