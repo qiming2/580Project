@@ -69,8 +69,9 @@ namespace KT {
 			vec3 m_data[3];
 		};
 		Triangle() {};
+		Triangle(const vec3& a, const vec3& b, const vec3& c) : m_a(a), m_b(b), m_c(c) {}
 		virtual Record intersection(const ray& r) const override;
-
+		
 		friend std::ostream& operator<<(std::ostream& out, const Triangle& s);
 	};
 	std::ostream& operator<<(std::ostream& out, const Triangle& s);

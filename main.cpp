@@ -75,23 +75,33 @@ int main() {
 	//////////////////////////////// Test Scene End /////////////////
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
-	
+
 	//surf_man.make_random_scene();
-	shared_ptr<material> material1 = make_shared<dielectric>(1.5);
-	surf_man.Add(make_shared<Sphere>(vec3(0, 1, 0), 1.0, material1));
-	std::shared_ptr<texture> m2_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
+	auto material3 = make_shared<metal>(vec3(1.0, 1.0, 1.0), 0.0);
+    surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
 
-	auto material2 = make_shared<lambertian>(m2_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
 
-	auto material3 = make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0);
-	surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
+	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
+	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+	/*
+	auto material2 = make_shared<lambertian>(water_tex);
+	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
 
-	shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
-	surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
+	//auto material3 = make_shared<lambertian>(checker);
+	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
+	float length = 3;
+	vec3 ta = { -length, -1, length };
+	vec3 tb = { length, -1, length };
+	vec3 tc = { -length, -1, -length };
+
+	vec3 td = { length, -1, -length };
+	surf_man.Add(make_shared<Triangle>(ta, tb, tc));
+	surf_man.Add(make_shared<Triangle>(tb, td, tc));
+	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
+
+
 
 	//////////////////////////////// Test Scene End /////////////////
-
 
 	vec3 lookfrom(13, 2, 3);
 	vec3 lookat(0, 0, 0);
@@ -104,23 +114,25 @@ int main() {
 	vec3 output_color;
 	clock_t start, stop;
 	start = clock();
+
+	/////////////////////////////////////// Ray Trace Core ////////////////////////////////////////////
 	for (size_t y = 0; y < image_height; ++y) {
 		for (size_t x = 0; x < image_width; ++x) {
       output_color = vec3(0.0f);
-	  
+
       // Antialiasing
       for (size_t s = 0; s < samples_per_pixel; ++s) {
 		  ray cur_ray;
 		  float v = (float(y) + random_double()) / (float)(image_height - 1);
 		  float u = (float(x) + random_double()) / (float)(image_width - 1);
 		  cur_ray = cam.getRay(u, v);
-  		// Shading inside
-  		record = surf_man.intersection(cur_ray, 0, max_depth, cam);
-  		if (record.m_surf) {
-  			output_color += record.m_color*(1.0f/(float)samples_per_pixel);
-        } else {
-          output_color += background*(1.0f/(float)samples_per_pixel);
-        }
+  			// Shading inside
+  			record = surf_man.intersection(cur_ray, 0, max_depth, cam);
+  			if (record.m_surf) {
+  				output_color += record.m_color*(1.0f/(float)samples_per_pixel);
+			} else {
+			  output_color += background*(1.0f/(float)samples_per_pixel);
+			}
 
 				//print(output_color);
 				// Note: y * Width * 3 since we have width * 3 floats in a row!

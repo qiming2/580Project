@@ -38,6 +38,9 @@ namespace KT {
 		{
 		}
 
+		inline float& operator[](const size_t& index) {
+			return data[index];
+		}
 		float dot(const vec3& other) const {
 			return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z;
 		}
@@ -57,7 +60,7 @@ namespace KT {
 			return sqrtf(m_x * m_x + m_y * m_y + m_z * m_z);
 		}
 
-		float len_squared() const { 
+		float len_squared() const {
 			return m_x * m_x + m_y * m_y + m_z * m_z;
 		}
 
@@ -110,7 +113,7 @@ namespace KT {
 			return vec3(random_double(dmin, dmax), random_double(dmin, dmax), random_double(dmin, dmax));
 		}
 
-		// rejection method 
+		// rejection method
 		inline static vec3 random_unit_sphere() {
 			while (true) {
 				vec3 generated = random(-1.0, 1.0);
@@ -121,7 +124,7 @@ namespace KT {
 			}
 		}
 
-		// rejection method 
+		// rejection method
 		inline static vec3 random_unit_disk() {
 			while (true) {
 				vec3 generated = vec3(random_double(-1.0f, 1.0f), random_double(-1.0f, 1.0f), 0.0f);

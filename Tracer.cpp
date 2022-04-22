@@ -24,7 +24,7 @@ KT::Record::Record(Surface* surf, float t) : m_surf(surf), m_t(t)
 void KT::Sphere::getUV(const KT::vec3& p, float& u, float& v) {
 	float theta = acos(-p.m_y);
 	float phi = atan2(-p.m_z, p.m_x) + M_PI;
-	
+
 	u = phi / (2 * M_PI);
 	v = theta / M_PI;
 }
@@ -49,7 +49,7 @@ KT::Record KT::Sphere::intersection(const ray& r) const
 		record.m_t = t1;
 
 		point = r.eval(t1);
-		
+
 		record.m_normal = (point - m_o) / m_r;
 		record.set_face_normal(r, record.m_normal);
 		Sphere::getUV(record.m_normal, record.u, record.v);
@@ -115,7 +115,7 @@ void KT::SurfaceManager::make_random_scene()
 					// diffuse
 					auto albedo = color::random() * color::random();
 					std::shared_ptr<texture> plain_tex = make_shared<solid_color>(albedo);
-					
+
 					sphere_material = make_shared<lambertian>(plain_tex);
 					Add(make_shared<Sphere>(center, 0.2, sphere_material));
 				}
@@ -134,15 +134,16 @@ void KT::SurfaceManager::make_random_scene()
 			}
 		}
 	}
-
 	auto material1 = make_shared<dielectric>(1.5);
-	Add(make_shared<Sphere>(point3(0, 1, 0), 1.0, material1));
-	std::shared_ptr<texture> m2_tex = make_shared<solid_color>(color(0.4, 0.2, 0.1));
-	auto material2 = make_shared<lambertian>(m2_tex);
-	Add(make_shared<Sphere>(point3(-4, 1, 0), 1.0, material2));
+	Add(make_shared<Sphere>(vec3(0, 1, 0), 1.0, material1));
 
-	auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-	Add(make_shared<Sphere>(point3(4, 1, 0), 1.0, material3));
+	auto lam_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
+    auto material2 = make_shared<lambertian>(lam_tex);
+    Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
+
+    auto material3 = make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0);
+    Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
+
 }
 
 extern KT::vec3 globalDir;
@@ -165,16 +166,24 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 	if (ret.m_surf) {
 		ray scattered;
 		vec3 attenuation;
-		if (ret.mat_ptr->scatter(r, ret, attenuation, scattered)) {
+		// Triangle
+		if (!ret.mat_ptr) {
+			vec3 hitpoint = r.eval(ret.m_t);
+			vec3 gen_color = vec3(1.0, 1.0, 1.0);
+			ret.m_color = gen_color * intersection(ray(hitpoint, reflect(r.m_d, ret.m_normal)), level + 1, max_level, c).m_color;
+
+			//ret.m_color = vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f);
+			return ret;
+		} else if (ret.mat_ptr->scatter(r, ret, attenuation, scattered)) {
 			ret.m_color = attenuation * intersection(scattered, level + 1, max_level, c).m_color;
 			return ret;
 		}
-		
-	
+
+
 		ret.m_color = vec3(0.0f);
 		return ret;
 	}
-	
+
 	// background color
 	vec3 unitDir = normalize(r.m_d);
 	float t = 0.5f * (unitDir.m_y + 1.0f);
@@ -277,7 +286,7 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	ret.m_surf = this;
 	ret.m_normal = v0v1.cross(v0v2);
 	ret.m_normal.normalize();
-
+	ret.mat_ptr = nullptr;
 
 	return ret;
 }
