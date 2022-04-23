@@ -68,6 +68,20 @@ namespace KT {
 			};
 			vec3 m_data[3];
 		};
+
+		union {
+			struct {
+				vec3 m_a_uv;
+				vec3 m_b_uv;
+				vec3 m_c_uv;
+			};
+			struct {
+				vec3 v0_uv;
+				vec3 v1_uv;
+				vec3 v2_uv;
+			};
+			vec3 m_uv_data[3];
+		};
 		Triangle() {};
 		Triangle(const vec3& a, const vec3& b, const vec3& c) : m_a(a), m_b(b), m_c(c) {}
 		virtual Record intersection(const ray& r) const override;

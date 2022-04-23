@@ -41,6 +41,11 @@ namespace KT {
 		inline float& operator[](const size_t& index) {
 			return data[index];
 		}
+
+		inline const float& operator[](const size_t& index) const {
+			return data[index];
+		}
+
 		float dot(const vec3& other) const {
 			return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z;
 		}

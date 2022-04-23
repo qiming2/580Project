@@ -77,8 +77,9 @@ int main() {
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
 
 	//surf_man.make_random_scene();
-	auto material3 = make_shared<metal>(vec3(1.0, 1.0, 1.0), 0.0);
-    surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
+	auto lam_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
+	auto material2 = make_shared<lambertian>(lam_tex);
+	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
 
 
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
@@ -89,14 +90,24 @@ int main() {
 
 	//auto material3 = make_shared<lambertian>(checker);
 	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
-	float length = 3;
-	vec3 ta = { -length, -1, length };
-	vec3 tb = { length, -1, length };
-	vec3 tc = { -length, -1, -length };
+	float length = 1;
+	vec3 ta = { -length, 0, length };
+	vec3 tb = { length, 0, length };
+	vec3 tc = { -length, 0, -length };
 
-	vec3 td = { length, -1, -length };
-	surf_man.Add(make_shared<Triangle>(ta, tb, tc));
-	surf_man.Add(make_shared<Triangle>(tb, td, tc));
+	vec3 td = { length, 0, -length };
+	auto tri1 = make_shared<Triangle>(ta, tb, tc);
+	tri1->m_uv_data[0] = { 0, 1, 0 };
+	tri1->m_uv_data[1] = { 1, 1, 0 };
+	tri1->m_uv_data[2] = { 0, 0, 0 };
+	surf_man.Add(tri1);
+
+	auto tri2 = make_shared<Triangle>(td, tb, tc);
+	tri2->m_uv_data[0] = { 1, 0, 0 };
+	tri2->m_uv_data[1] = { 1, 1, 0 };
+	tri2->m_uv_data[2] = { 0, 0, 0 };
+	surf_man.Add(tri2);
+
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
 

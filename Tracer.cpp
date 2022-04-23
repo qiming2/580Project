@@ -169,8 +169,8 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 		// Triangle
 		if (!ret.mat_ptr) {
 			vec3 hitpoint = r.eval(ret.m_t);
-			vec3 gen_color = vec3(1.0, 1.0, 1.0);
-			ret.m_color = gen_color * intersection(ray(hitpoint, reflect(r.m_d, ret.m_normal)), level + 1, max_level, c).m_color;
+			vec3 gen_color = vec3(0.5, 0.5, 0.5);
+			//ret.m_color = gen_color * intersection(ray(hitpoint, reflect(r.m_d, ret.m_normal)), level + 1, max_level, c).m_color;
 
 			//ret.m_color = vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f);
 			return ret;
@@ -268,7 +268,7 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	// Culling: parallel
 	if (determ > -EPSILON && determ < EPSILON) return ret;
 	// Backface culling
-	if (determ < EPSILON) return ret;
+	//if (determ < EPSILON) return ret;
 	float invDet = 1.0f / determ;
 	vec3 tvec = r.m_o - m_a;
 
@@ -287,7 +287,9 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	ret.m_normal = v0v1.cross(v0v2);
 	ret.m_normal.normalize();
 	ret.mat_ptr = nullptr;
-
+	ret.u = ((1.0f - u - v) * m_uv_data[2][0] + u * m_uv_data[0][0] + v * m_uv_data[1][0]);
+	ret.v = ((1.0f - u - v) * m_uv_data[2][1] + u * m_uv_data[0][1] + v * m_uv_data[1][1]);
+	ret.m_color = vec3(ret.u, ret.v, 1.0f-ret.u-ret.v);
 	return ret;
 }
 
