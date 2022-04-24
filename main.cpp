@@ -96,15 +96,15 @@ int main() {
 	vec3 tc = { -length, 0, -length };
 
 	vec3 td = { length, 0, -length };
-	auto tri1 = make_shared<Triangle>(ta, tb, tc);
-	tri1->m_uv_data[0] = { 0, 1, 0 };
-	tri1->m_uv_data[1] = { 1, 1, 0 };
+	auto tri1 = make_shared<Triangle>(tb, tc, ta);
+	tri1->m_uv_data[0] = { 1, 1, 0 };
+	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 0, 0, 0 };
 	surf_man.Add(tri1);
 
-	auto tri2 = make_shared<Triangle>(td, tb, tc);
-	tri2->m_uv_data[0] = { 1, 0, 0 };
-	tri2->m_uv_data[1] = { 1, 1, 0 };
+	auto tri2 = make_shared<Triangle>(tb, tc, td);
+	tri2->m_uv_data[0] = { 1, 1, 0 };
+	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 0, 0 };
 	surf_man.Add(tri2);
 

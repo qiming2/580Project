@@ -161,3 +161,8 @@ KT::vec3 water_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 	
 	return output_color * albedo;
 }
+
+KT::vec3 image_texture::getColor(float u, float v, const KT::vec3& hitpoint) const
+{
+	return KT::vec3();
+}

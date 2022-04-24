@@ -282,14 +282,16 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	float t = v0v2.dot(qvec) * invDet;
 	if (t < HIT_EPSILON) return ret;
 
+
 	ret.m_t = t;
 	ret.m_surf = this;
+	vec3 hitpoint = r.eval(ret.m_t);
 	ret.m_normal = v0v1.cross(v0v2);
 	ret.m_normal.normalize();
 	ret.mat_ptr = nullptr;
 	ret.u = ((1.0f - u - v) * m_uv_data[2][0] + u * m_uv_data[0][0] + v * m_uv_data[1][0]);
 	ret.v = ((1.0f - u - v) * m_uv_data[2][1] + u * m_uv_data[0][1] + v * m_uv_data[1][1]);
-	ret.m_color = vec3(ret.u, ret.v, 1.0f-ret.u-ret.v);
+	ret.m_color = vec3(ret.u, ret.v, 0.0f);
 	return ret;
 }
 

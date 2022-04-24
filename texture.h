@@ -29,6 +29,18 @@ public:
 	std::shared_ptr<texture> even;
 };
 
+class image_texture : public texture {
+public:
+	image_texture();
+
+	virtual KT::vec3 getColor(float u, float v, const KT::vec3& hitpoint) const override;
+
+
+public:
+	KT::vec3* data;
+	int size;
+};
+
 class water_texture : public texture {
 public:
 	water_texture() : albedo(KT::vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f)) {};
