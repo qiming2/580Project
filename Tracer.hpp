@@ -14,8 +14,8 @@ namespace KT {
 		float u;
 		float v;
 		const Surface* m_surf = nullptr;
-		float m_t = std::numeric_limits<float>::infinity();
-		std::shared_ptr<material> mat_ptr;
+		float m_t = std::numeric_limits<float>::infinity();  // time used to hit the object 
+		std::shared_ptr<material> mat_ptr;  // surface material
 		bool front_face;
 		Record();
 		Record(Surface* surf, float t);
@@ -47,11 +47,31 @@ namespace KT {
 		
 		friend std::ostream& operator<<(std::ostream& out, const Sphere& s);
 		static void getUV(const vec3& point, float& u, float& v);
-	public:
+	private:
 		vec3 m_o; // origin
 		float m_r;
 	};
 	std::ostream& operator<<(std::ostream& out, const Sphere& s);
+
+	class MovingSphere : public Surface {
+	public:
+		MovingSphere() {};
+		MovingSphere(const vec3& o1, const vec3& o2, double _time1, double _time2, double r, std::shared_ptr<material> mat) : m_o1(o1), m_o2(o2), m_r(r), time1(_time1), time2(_time2), mat_ptr(mat) {}
+
+		std::shared_ptr<material> mat_ptr;
+		virtual Record intersection(const ray& r) const override;
+
+		friend std::ostream& operator<<(std::ostream& out, const Sphere& s);
+		vec3 center(double time) const;
+		static void getUV(const vec3& point, float& u, float& v);
+	private:
+		vec3 m_o1; // origin 1
+		vec3 m_o2; // origin 2
+		double time1;
+		double time2;
+		float m_r;
+	};
+	std::ostream& operator<<(std::ostream& out, const MovingSphere& s);
 
 	class Triangle : public Surface {
 	public:

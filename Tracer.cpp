@@ -29,6 +29,54 @@ void KT::Sphere::getUV(const KT::vec3& p, float& u, float& v) {
 	v = theta / M_PI;
 }
 
+KT::vec3 KT::MovingSphere::center(double time) const {
+	return m_o1 + ((time - time1) / (time2 - time1)) * (m_o2 - m_o1);
+}
+
+KT::Record KT::MovingSphere::intersection(const ray& r) const
+{
+	Record record;
+	record.mat_ptr = mat_ptr;
+	vec3 e_minus_c = r.m_o - center(r.time);
+	float d_dot_d = r.m_d.dot(r.m_d);
+	float e_dot_d = r.m_d.dot(e_minus_c);
+	float discrim = e_dot_d * e_dot_d - d_dot_d * ((e_minus_c.dot(e_minus_c) - m_r * m_r));
+	if (discrim < EPSILON) {
+		return record;
+	}
+
+	discrim = sqrtf(discrim);
+	vec3 point;
+	float t1 = (-e_dot_d - discrim) / d_dot_d;
+	if (t1 > HIT_EPSILON) {
+		record.m_surf = this;
+		record.m_t = t1;
+
+		point = r.eval(t1);
+
+		record.m_normal = (point - center(r.time)) / m_r;
+		record.set_face_normal(r, record.m_normal);
+		Sphere::getUV(record.m_normal, record.u, record.v);
+		//println(record.m_normal);
+		return record;
+	}
+
+	float t2 = (-e_dot_d + discrim) / d_dot_d;
+	if (t2 > HIT_EPSILON) {
+		record.m_surf = this;
+		record.m_t = t2;
+
+		point = r.eval(t2);
+
+		record.m_normal = (point - center(r.time)) / m_r;
+		record.set_face_normal(r, record.m_normal);
+		Sphere::getUV(record.m_normal, record.u, record.v);
+		return record;
+	}
+
+	return record;
+}
+
 KT::Record KT::Sphere::intersection(const ray& r) const
 {
 	Record record;
@@ -98,9 +146,13 @@ void KT::SurfaceManager::make_random_scene()
 	using point3 = vec3;
 	surfaces.clear();
 
-	std::shared_ptr<texture> ground = make_shared<solid_color>(color(0.5, 0.5, 0.5));
-	auto ground_material = make_shared<lambertian>(ground);
-	Add(make_shared<Sphere>(point3(0, -1000, 0), 1000, ground_material));
+	//std::shared_ptr<texture> ground = make_shared<solid_color>(color(0.5, 0.5, 0.5));
+	//auto ground_material = make_shared<lambertian>(ground);
+	//Add(make_shared<Sphere>(point3(0, -1000, 0), 1000, ground_material));
+	//shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+	//Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
+	auto checker = make_shared<checker_texture2>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+	Add(make_shared<Sphere>(point3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
 
 	for (int a = -1; a < 1; a++) {
@@ -117,7 +169,8 @@ void KT::SurfaceManager::make_random_scene()
 					std::shared_ptr<texture> plain_tex = make_shared<solid_color>(albedo);
 
 					sphere_material = make_shared<lambertian>(plain_tex);
-					Add(make_shared<Sphere>(center, 0.2, sphere_material));
+					auto center2 = center + vec3(0, random_double(0, .5), 0);
+					Add(make_shared<MovingSphere>(center, center2, 0.0, 1.0, 0.2, sphere_material));
 				}
 				else if (choose_mat < 0.95) {
 					// metal

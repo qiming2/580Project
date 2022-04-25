@@ -253,9 +253,10 @@ namespace KT {
 	struct ray {
 		vec3 m_o; // origin
 		vec3 m_d; // direction
+		double time;
 		ray() {}
-		ray(vec3 o, vec3 d):
-			m_o(o), m_d(d)
+		ray(vec3 o, vec3 d, double t = 0.0):
+			m_o(o), m_d(d), time(t)
 		{
 
 		}

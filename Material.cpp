@@ -11,7 +11,7 @@ namespace KT{
 			scatter_dir = rec.m_normal;
 		}
 
-		scattered = ray(hitpoint, scatter_dir);
+		scattered = ray(hitpoint, scatter_dir, r.time);
 		attenuation = albedo->getColor(rec.u, rec.v, hitpoint);
 		return true;
 	}
@@ -19,7 +19,7 @@ namespace KT{
 	bool metal::scatter(const ray& r, const Record& rec, vec3& attenuation, ray& scattered) const {
 		vec3 hitpoint = r.eval(rec.m_t);
 		vec3 reflected = reflect(r.m_d, rec.m_normal);
-		scattered = ray(hitpoint, reflected + fuzzy * vec3::random_unit_sphere());
+		scattered = ray(hitpoint, reflected + fuzzy * vec3::random_unit_sphere(), r.time);
 		attenuation = albedo;
 		// check whether reflection ray is on the same side of
 		// the normal
@@ -42,13 +42,13 @@ namespace KT{
 		if (index * sin_theta > 1.0 || reflectance(cos_theta, index) > random_double()) {
 			// Must reflect
 			vec3 reflect_dir = reflect(unit_dir, rec.m_normal);
-			scattered = ray(hitpoint, reflect_dir);
+			scattered = ray(hitpoint, reflect_dir, r.time);
 		}
 		else {
 			// refract
 			
 			vec3 refract_dir = refract(unit_dir, rec.m_normal, index);
-			scattered = ray(hitpoint, refract_dir);
+			scattered = ray(hitpoint, refract_dir, r.time);
 		}
 
 		

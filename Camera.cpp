@@ -6,11 +6,11 @@
 
 std::ostream& KT::operator<<(std::ostream& out, const KT::Camera& camera)
 {
-	
+
 	return out;
 }
 
-KT::Camera::Camera(vec3 origin, vec3 lookat, vec3 up, float vfov, float aspect_ratio, float aperture, float focus_dist)
+KT::Camera::Camera(vec3 origin, vec3 lookat, vec3 up, float vfov, float aspect_ratio, float aperture, float focus_dist, double _time1, double _time2)
 {
 	float theta = DTOR(vfov);
 	float h = tan(theta / 2.0f);
@@ -25,13 +25,16 @@ KT::Camera::Camera(vec3 origin, vec3 lookat, vec3 up, float vfov, float aspect_r
 	vertical = focus_dist * viewport_height * v;
 	lower_left = origin - horizontal / 2.0f - vertical / 2.0f + w * focus_dist;
 	lens_radius = aperture / 2.0f;
+
+	time1 = _time1;
+	time2 = _time2;
 }
 
 KT::ray KT::Camera::getRay(float s, float t)
 {
 	vec3 rd = lens_radius * vec3::random_unit_disk();
 	vec3 offset = u * rd.m_x + v * rd.m_y;
-	KT::ray ret(origin + offset, lower_left + s * horizontal + t * vertical - origin - offset);
+	KT::ray ret(origin + offset, lower_left + s * horizontal + t * vertical - origin - offset, random_double(time1, time2));
 	ret.m_d.normalize();
 	return ret;
 }

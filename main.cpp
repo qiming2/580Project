@@ -58,6 +58,8 @@ int main() {
 	float* image = new float[image_height *image_width * 3];
 	float t;
 	vec3 color;
+
+	// background color
 	for (size_t y = 0; y < image_height; ++y) {
 		for (size_t x = 0; x < image_width; ++x) {
 			index = y * image_width * 3 + x * 3;
@@ -76,37 +78,46 @@ int main() {
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
 
-	//surf_man.make_random_scene();
-	auto lam_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
-	auto material2 = make_shared<lambertian>(lam_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
+	 //surf_man.make_random_scene();
+	shared_ptr<material> sphere_material;
+	auto albedo = vec3::random() * vec3::random();
+	std::shared_ptr<texture> plain_tex = make_shared<solid_color>(albedo);
+
+	vec3 center(4, 1, 0);
+	sphere_material = make_shared<lambertian>(plain_tex);
+    auto center2 = center + vec3(0, 100, 0);
+	surf_man.Add(make_shared<MovingSphere>(center, center2, 0.0, 1.0, 0.2, sphere_material));
+
+	//auto lam_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
+	//auto material2 = make_shared<lambertian>(lam_tex);
+	//surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
 
 
-	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
-	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
-	/*
-	auto material2 = make_shared<lambertian>(water_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
+	//std::shared_ptr<texture> water_tex = make_shared<water_texture>();
+	//std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+
+	// auto material2 = make_shared<lambertian>(water_tex);
+	//surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));  // origin, radius, material
 
 	//auto material3 = make_shared<lambertian>(checker);
 	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
-	float length = 1;
-	vec3 ta = { -length, 0, length };
-	vec3 tb = { length, 0, length };
-	vec3 tc = { -length, 0, -length };
+	//float length = 1;
+	//vec3 ta = { -length, 0, length };
+	//vec3 tb = { length, 0, length };
+	//vec3 tc = { -length, 0, -length };
 
-	vec3 td = { length, 0, -length };
-	auto tri1 = make_shared<Triangle>(ta, tb, tc);
-	tri1->m_uv_data[0] = { 0, 1, 0 };
-	tri1->m_uv_data[1] = { 1, 1, 0 };
-	tri1->m_uv_data[2] = { 0, 0, 0 };
-	surf_man.Add(tri1);
+	//vec3 td = { length, 0, -length };
+	//auto tri1 = make_shared<Triangle>(ta, tb, tc);
+	//tri1->m_uv_data[0] = { 0, 1, 0 };
+	//tri1->m_uv_data[1] = { 1, 1, 0 };
+	//tri1->m_uv_data[2] = { 0, 0, 0 };
+	//surf_man.Add(tri1);
 
-	auto tri2 = make_shared<Triangle>(td, tb, tc);
-	tri2->m_uv_data[0] = { 1, 0, 0 };
-	tri2->m_uv_data[1] = { 1, 1, 0 };
-	tri2->m_uv_data[2] = { 0, 0, 0 };
-	surf_man.Add(tri2);
+	//auto tri2 = make_shared<Triangle>(td, tb, tc);
+	//tri2->m_uv_data[0] = { 1, 0, 0 };
+	//tri2->m_uv_data[1] = { 1, 1, 0 };
+	//tri2->m_uv_data[2] = { 0, 0, 0 };
+	//surf_man.Add(tri2);
 
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
