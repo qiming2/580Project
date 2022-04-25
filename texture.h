@@ -31,7 +31,7 @@ public:
 
 class image_texture : public texture {
 public:
-	image_texture();
+	image_texture(KT::vec3* data, int width, int height);
 
 	virtual KT::vec3 getColor(float u, float v, const KT::vec3& hitpoint) const override;
 
@@ -52,3 +52,5 @@ public:
 public:
 	KT::vec3 albedo;
 };
+
+KT::vec3* genGersterWaveTexture(KT::vec3 windDir, int n);
