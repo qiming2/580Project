@@ -88,7 +88,9 @@ int main() {
 	auto material2 = make_shared<lambertian>(checker);
 	auto material3 = make_shared<lambertian>(usc_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(1, 1, 0), 1.0, material3));
-
+	auto material2 = make_shared<lambertian>(checker);
+	auto material3 = make_shared<lambertian>(usc_tex);
+	surf_man.Add(make_shared<Sphere>(vec3(1, 1, 0), 1.0, material3));
 
 	
 
@@ -119,6 +121,7 @@ int main() {
 
 	auto tri2 = make_shared<Triangle>(tc, td, tb);
 	tri2->normap = normap_texture;
+	tri2->mat_ptr = metal_mat;
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 1, 0 };
