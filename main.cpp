@@ -8,6 +8,7 @@
 #include "Camera.hpp"
 #include "Tracer.hpp"
 #include "util.hpp"
+#include "texture.h"
 
 using namespace KT;
 using namespace std;
@@ -84,6 +85,10 @@ int main() {
 
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+
+	vec3* normap = genGersterWaveTexture(vec3(0.5, 0.5, 0), 1000);
+	std::shared_ptr<texture> normap_texture = make_shared<image_texture>(normap, 1000, 1000);
+	
 	/*
 	auto material2 = make_shared<lambertian>(water_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
@@ -97,12 +102,14 @@ int main() {
 
 	vec3 td = { length, 0, -length };
 	auto tri1 = make_shared<Triangle>(tb, tc, ta);
+	tri1->normap = normap_texture;
 	tri1->m_uv_data[0] = { 1, 1, 0 };
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 0, 0, 0 };
 	surf_man.Add(tri1);
 
 	auto tri2 = make_shared<Triangle>(tb, tc, td);
+	tri2->normap = normap_texture;
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 0, 0 };

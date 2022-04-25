@@ -1,4 +1,5 @@
 #pragma once
+#define _USE_MATH_DEFINES
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
@@ -12,6 +13,10 @@
 #define DTOR(x) ((x) / 180.0f * M_PI)
 
 namespace KT {
+	inline int random_int(int imin, int imax) {
+		return imin + (rand() * (imax - imin) / RAND_MAX);
+	}
+
 	inline double random_double() {
 		// returns a random real in [0, 1)
 		return rand() / (RAND_MAX + 1.0);

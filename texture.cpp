@@ -1,4 +1,5 @@
 #include "texture.h"
+#include "580math.hpp"
 
 solid_color::solid_color(KT::vec3 _color_val)
 {
@@ -162,7 +163,59 @@ KT::vec3 water_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 	return output_color * albedo;
 }
 
+image_texture::image_texture(KT::vec3* _data, int _width, int _height)
+{
+	data = _data;
+	width = _width;
+	height = _height;
+}
+
 KT::vec3 image_texture::getColor(float u, float v, const KT::vec3& hitpoint) const
 {
-	return KT::vec3();
+	KT::vec3 color = (0, 0, 0);
+	float x = u * (width - 1);
+	float y = v * (height - 1);
+
+	float s = x - floor(x);
+	float t = y - floor(y);
+	for (int c = 0; c < 3; c++) {
+		color[c] = s * t * data[int(ceil(y) * width + ceil(x))][c] + (1 - s) * t * data[int(ceil(y) * width + floor(x))][c] + s * (1 - t) * data[int(floor(y) * width + ceil(x))][c] + (1 - s) * (1 - t) * data[int(floor(y) * width + floor(x))][c];
+	}
+
+	return color;
+}
+
+// windDir should be vec3(x, y, 0); n is the size of the output image texture
+KT::vec3* genGersterWaveTexture(KT::vec3 windDir, int n)
+{
+	// Use the Texture on a 10m basis
+	float A = KT::random_double(0.01f, 0.02f);
+	float Q = KT::random_double(0.3f, 0.4f);
+	// The wave direction is determined by wind direction
+	// but have a random angle to the wind direction
+	float windAngle = acosf((windDir.m_x / sqrtf(windDir.m_x * windDir.m_x + windDir.m_y * windDir.m_y)));
+	if (windDir.m_y < 0) windAngle = -windAngle;
+	float waveAngle = KT::random_double(windAngle - DTOR(45.0f),
+		windAngle + DTOR(45.0f));
+	KT::vec3 waveD = (cos(waveAngle), sin(waveAngle), 0);
+	float s = KT::random_double(0.5f, 1.0f);
+	float l = ((float)KT::random_int(4, 32) / n);
+
+
+	KT::vec3* data = new KT::vec3[n * n];
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < n; ++j) {
+			data[i * n + j] = KT::vec3(0.0f, 1.0f, 0.0f);
+			//no wave animation, so time = 0;
+			float u = (float)j / n, v = (float)i / n;
+			float w = 2 * M_PI / l;
+			//float fi = 2 * M_PI * s / l;
+
+			data[i * n + j].m_x += (-waveD.m_x) * w * A * cos(waveD.dot(KT::vec3(u, v, 0)) * w);
+			data[i * n + j].m_y -= Q * w * A * sin(waveD.dot(KT::vec3(u, v, 0)) * w);
+			data[i * n + j].m_z += (-waveD.m_y) * w * A * cos(waveD.dot(KT::vec3(u, v, 0)) * w);
+			//std::cout << (-waveD.m_x) * w * A * cos(waveD.dot(KT::vec3(u, v, 0)) * w) << std::endl;
+		}
+	}
+	return data;
 }
