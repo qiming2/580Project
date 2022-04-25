@@ -8,6 +8,8 @@
 #include "Camera.hpp"
 #include "Tracer.hpp"
 #include "util.hpp"
+#include "stb_image.h"
+#include "stb_image_write.h"
 #include "texture.h"
 
 using namespace KT;
@@ -37,7 +39,7 @@ size_t max_depth = 20;
 
 
 // AA param
-const static size_t samples_per_pixel = 5;
+const static size_t samples_per_pixel = 20;
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -57,6 +59,7 @@ int main() {
 	size_t index = 0;
 	float r, g, b;
 	float* image = new float[image_height *image_width * 3];
+	uint8_t* image_out = new uint8_t[image_height * image_width * 3];
 	float t;
 	vec3 color;
 	for (size_t y = 0; y < image_height; ++y) {
@@ -70,7 +73,6 @@ int main() {
 		}
 	}
 
-
 	// 2. Generating objects (sphere as the most simplistic object to do the intersection test)
 
 	//////////////////////////////// Test Scene End /////////////////
@@ -78,13 +80,17 @@ int main() {
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
 
 	//surf_man.make_random_scene();
-	auto lam_tex = make_shared<solid_color>(vec3(0.4, 0.2, 0.1));
-	auto material2 = make_shared<lambertian>(lam_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
-
-
+	auto usc_tex = make_shared<image_texture>("Texture/usc1.png");
+	auto lam_tex = make_shared<solid_color>(vec3(1.0, 1.0, 1.0));
+	auto material4 = make_shared<metal>(vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f), 0.0);
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+	auto material2 = make_shared<lambertian>(checker);
+	auto material3 = make_shared<lambertian>(usc_tex);
+	surf_man.Add(make_shared<Sphere>(vec3(1, 1, 0), 1.0, material3));
+
+
+	
 
 	vec3* normap = genGersterWaveTexture(vec3(0.5, 0.5, 0), 1000);
 	std::shared_ptr<texture> normap_texture = make_shared<image_texture>(normap, 1000, 1000);
@@ -93,30 +99,31 @@ int main() {
 	auto material2 = make_shared<lambertian>(water_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
 
-	auto material3 = make_shared<lambertian>(water_tex);
+	
+	
 	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
-	float length = 1;
-	vec3 ta = { -length, 0, length };
-	vec3 tb = { length, 0, length };
-	vec3 tc = { -length, 0, -length };
-
-	vec3 td = { length, 0, -length };
-	auto tri1 = make_shared<Triangle>(tb, tc, ta);
+	float length = 3;
+	vec3 ta = { -length ,0 ,  length };
+	vec3 tb = { length  , 0,  length };
+	vec3 tc = { -length ,0 , -length };
+						  
+	vec3 td = { length  , 0, -length };
+	auto tri1 = make_shared<Triangle>(tb, ta, tc);
 	tri1->normap = normap_texture;
-	tri1->m_uv_data[0] = { 1, 1, 0 };
-	tri1->m_uv_data[1] = { 0, 0, 0 };
-	tri1->m_uv_data[2] = { 0, 1, 0 };
-	tri1->mat_ptr = material3;
+	tri1->m_uv_data[0] = { 0, 0, 0 };
+	tri1->m_uv_data[1] = { 0, 1, 0 };
+	tri1->m_uv_data[2] = { 1, 0, 0 };
+	tri1->mat_ptr = material4;
 
-	//surf_man.Add(tri1);
+	surf_man.Add(tri1);
 
-	auto tri2 = make_shared<Triangle>(tb, tc, td);
+	auto tri2 = make_shared<Triangle>(tc, td, tb);
 	tri2->normap = normap_texture;
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
-	tri2->m_uv_data[2] = { 0, 0, 0 };
-	tri2->mat_ptr = material3;
-	//surf_man.Add(tri2);
+	tri2->m_uv_data[2] = { 0, 1, 0 };
+	tri2->mat_ptr = material4;
+	surf_man.Add(tri2);
 
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
@@ -128,10 +135,10 @@ int main() {
 
 	//////////////////////////////// Test Scene End /////////////////
 
-	vec3 lookfrom(13, 2, 3);
+	vec3 lookfrom(0, 3, 12);
 	vec3 lookat(0, 0, 0);
 	vec3 vup(0, 1, 0);
-	auto dist_to_focus = 10.0f;
+	auto dist_to_focus = (lookfrom - lookat).len();
 	auto aperture = 0.1f;
 	Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
 
@@ -185,7 +192,7 @@ int main() {
 		const int dimx = image_width, dimy = image_height;
 		ofstream ofs("trace.ppm");
 		ofs << "P3" << endl << dimx << " " << dimy << endl << "255" << endl;
-
+		int out_index = 0;
 		for (int y = image_height - 1; y >= 0 ; --y) {
 			for (int x = 0; x < image_width; ++x) {
 				// Note: Order matters a lot!!
@@ -193,22 +200,19 @@ int main() {
 				// we need to store in the same order in ppm, otherwise the image might
 				// flip upside down
 				index = y * image_width * 3 + x * 3;
+				out_index = (image_height - 1 - y) * image_width * 3 + x * 3;
 				r = image[index] * 255.0f;
 				g = image[index + 1] * 255.0f;
 				b = image[index + 2] * 255.0f;
+				image_out[out_index] = uint8_t(r);
+				image_out[out_index +1] = uint8_t(g);
+				image_out[out_index +2] = uint8_t(b);
 				ofs << r  << " " << g << " " << b << " ";
 			}
 		}
 
 		ofs.close();
-		unsigned char* img = stbi_load("Texture/usc1.png", &width, &height, &channels, 0);
-		if (img == NULL) {
-			printf("Error in loading the image file Name: %s\n", "trace.ppm");
-		} else {
-			cout << "width: " << width << " height: " << height << " channels: " << channels << endl;
-			stbi_image_free(img);
-		}
-		if (stbi_write_jpg("trace.jpg", image_width, image_height, 3, image, 100) == 0) {
+		if (stbi_write_jpg("trace.jpg", image_width, image_height, 3, image_out, 100) == 0) {
 			printf("Error in writing the image");
 		}
 

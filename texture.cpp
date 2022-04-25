@@ -1,5 +1,6 @@
 #include "texture.h"
 #include "580math.hpp"
+#include "stb_image.h"
 
 solid_color::solid_color(KT::vec3 _color_val)
 {
@@ -162,7 +163,7 @@ KT::vec3 water_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 	output_color[0] = 1.0f - m_dist;
 	output_color[1] = 1.0f - m_dist;
 	output_color[2] = 1.0f - m_dist;
-	if (output_color[0] < 0.02f) {
+	if (output_color[0] < 0.05f) {
 		output_color = KT::vec3(1.0f, 1.0f, 1.0f);
 	}
 	return output_color * albedo;
@@ -173,6 +174,37 @@ image_texture::image_texture(KT::vec3* _data, int _width, int _height)
 	data = _data;
 	width = _width;
 	height = _height;
+}
+
+image_texture::~image_texture() {
+	delete[] data;
+	data = nullptr;
+}
+
+image_texture::image_texture(std::string image_dir)
+{
+	int channels;
+	unsigned char* img = stbi_load(image_dir.c_str(), &width, &height, &channels, 0);
+	if (img == NULL) {
+		printf("Error in loading the image file Name: %s\n", image_dir.c_str());
+	} else {
+		std::cout << image_dir << " {width: " << width << " height: " << height << " channels: " << channels << "}" << std::endl;
+	}
+
+	data = new KT::vec3[width * height];
+	//copy data
+	size_t index = 0;
+	size_t vecIndex = 0;
+	for (size_t i = 0; i < height; i++) {
+		for (size_t j = 0; j < width; j++) {
+			index = i * width * channels + j * channels;
+			vecIndex = (height - 1 - i) * width + j;
+			data[vecIndex].m_x = (float)img[index] / 255.0f;
+			data[vecIndex].m_y = (float)img[index+1] / 255.0f;
+			data[vecIndex].m_z = (float)img[index+2] / 255.0f;
+		}
+	}
+	stbi_image_free(img);
 }
 
 KT::vec3 image_texture::getColor(float u, float v, const KT::vec3& hitpoint) const

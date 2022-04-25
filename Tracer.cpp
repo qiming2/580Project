@@ -169,7 +169,7 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 		// Triangle
 		if (!ret.mat_ptr) {
 			vec3 hitpoint = r.eval(ret.m_t);
-			vec3 gen_color = vec3(0.5, 0.5, 0.5);
+			vec3 gen_color = vec3(1.0, 1.0, 1.0);
 			//ret.m_color = gen_color * intersection(ray(hitpoint, reflect(r.m_d, ret.m_normal)), level + 1, max_level, c).m_color;
 
 			//ret.m_color = vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f);
@@ -286,14 +286,14 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	ret.m_t = t;
 	ret.m_surf = this;
 	vec3 hitpoint = r.eval(ret.m_t);
-	ret.mat_ptr = nullptr;
+	ret.mat_ptr = mat_ptr;
 	ret.u = ((1.0f - u - v) * m_uv_data[2][0] + u * m_uv_data[0][0] + v * m_uv_data[1][0]);
 	ret.v = ((1.0f - u - v) * m_uv_data[2][1] + u * m_uv_data[0][1] + v * m_uv_data[1][1]);
 	ret.m_color = vec3(ret.u, ret.v, 0.0f);
-	// ret.m_normal = v0v1.cross(v0v2);
-	ret.m_normal = normap->getColor(ret.u, ret.v, hitpoint);
+	ret.m_normal = v0v2.cross(v0v1);
+	//ret.m_normal = normap->getColor(ret.u, ret.v, hitpoint);
 	ret.m_normal.normalize();
-	ret.m_color = ret.m_normal;
+	/*ret.m_color = ret.m_normal;*/
 	return ret;
 }
 

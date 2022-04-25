@@ -32,6 +32,8 @@ public:
 class image_texture : public texture {
 public:
 	image_texture(KT::vec3* data, int width, int height);
+	~image_texture();
+	image_texture(std::string image_dir);
 
 	virtual KT::vec3 getColor(float u, float v, const KT::vec3& hitpoint) const override;
 
