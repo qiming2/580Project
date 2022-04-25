@@ -1,5 +1,6 @@
 #include "texture.h"
 #include "580math.hpp"
+#include <math.h> 
 
 solid_color::solid_color(KT::vec3 _color_val)
 {
@@ -189,17 +190,20 @@ KT::vec3 image_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 KT::vec3* genGersterWaveTexture(KT::vec3 windDir, int n)
 {
 	// Use the Texture on a 10m basis
-	float A = KT::random_double(0.01f, 0.02f);
+	float A = KT::random_double(0.03f, 0.05f);
 	float Q = KT::random_double(0.3f, 0.4f);
+	std::cout << "A: " << A << ", Q: " << Q << std::endl;
 	// The wave direction is determined by wind direction
 	// but have a random angle to the wind direction
 	float windAngle = acosf((windDir.m_x / sqrtf(windDir.m_x * windDir.m_x + windDir.m_y * windDir.m_y)));
 	if (windDir.m_y < 0) windAngle = -windAngle;
 	float waveAngle = KT::random_double(windAngle - DTOR(45.0f),
 		windAngle + DTOR(45.0f));
-	KT::vec3 waveD = (cos(waveAngle), sin(waveAngle), 0);
+	std::cout << "wind: " << windAngle << ", wave : " << waveAngle << std::endl;
+	KT::vec3 waveD = KT::vec3(cos(waveAngle), sin(waveAngle), 0);
 	float s = KT::random_double(0.5f, 1.0f);
 	float l = ((float)KT::random_int(4, 32) / n);
+	std::cout << "windD: " << waveD << ", s : " << s << ", l : " << l << std::endl;
 
 
 	KT::vec3* data = new KT::vec3[n * n];

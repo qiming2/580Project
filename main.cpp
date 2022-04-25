@@ -85,9 +85,10 @@ int main() {
 
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
+	std::shared_ptr<material> metal_mat = make_shared<metal>(KT::vec3(9/255.0f, 66/255.0f, 181/255.0f), 1);
 
-	vec3* normap = genGersterWaveTexture(vec3(0.5, 0.5, 0), 1000);
-	std::shared_ptr<texture> normap_texture = make_shared<image_texture>(normap, 1000, 1000);
+	vec3* normap = genGersterWaveTexture(vec3(0.5, 0.5, 0), 100);
+	std::shared_ptr<texture> normap_texture = make_shared<image_texture>(normap, 100, 100);
 	
 	/*
 	auto material2 = make_shared<lambertian>(water_tex);
@@ -95,7 +96,7 @@ int main() {
 
 	//auto material3 = make_shared<lambertian>(checker);
 	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
-	float length = 1;
+	float length = 10;
 	vec3 ta = { -length, 0, length };
 	vec3 tb = { length, 0, length };
 	vec3 tc = { -length, 0, -length };
@@ -103,6 +104,7 @@ int main() {
 	vec3 td = { length, 0, -length };
 	auto tri1 = make_shared<Triangle>(tb, tc, ta);
 	tri1->normap = normap_texture;
+	tri1->mat_ptr = metal_mat;
 	tri1->m_uv_data[0] = { 1, 1, 0 };
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 0, 0, 0 };
@@ -110,6 +112,7 @@ int main() {
 
 	auto tri2 = make_shared<Triangle>(tb, tc, td);
 	tri2->normap = normap_texture;
+	tri2->mat_ptr = metal_mat;
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 0, 0 };
