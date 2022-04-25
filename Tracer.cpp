@@ -291,7 +291,7 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	ret.mat_ptr = nullptr;
 	ret.u = ((1.0f - u - v) * m_uv_data[2][0] + u * m_uv_data[0][0] + v * m_uv_data[1][0]);
 	ret.v = ((1.0f - u - v) * m_uv_data[2][1] + u * m_uv_data[0][1] + v * m_uv_data[1][1]);
-	ret.m_color = vec3(ret.u, ret.v, 0.0f);
+	ret.mat_ptr = mat_ptr;
 	return ret;
 }
 

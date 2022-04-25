@@ -103,7 +103,7 @@ point random2(point p) {
 	return ret.fract();
 }
 
-#define DIM 1.0f
+#define DIM 10.0f
 KT::vec3 water_texture::getColor(float u, float v, const KT::vec3& hitpoint) const
 {
 	// tile the space into subspaces to
@@ -136,33 +136,39 @@ KT::vec3 water_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 			point neighP = random2(p);
 
 			// we can use sin wave to animate the cell
-			double cur_time = time(NULL);
-			neighP.x = 0.5 + 0.5 * sin(cur_time + (double)neighP.x * 2 * 3.1415926);
-			neighP.y = 0.5 + 0.5 * sin(cur_time + (double)neighP.y * 2 * 3.1415926);
+			
+			neighP.x = 0.5 + 0.5 * sin((double)neighP.x * 2 * 3.1415926);
+			neighP.y = 0.5 + 0.5 * sin((double)neighP.y * 2 * 3.1415926);
 
 			point distanceV = neighP + neighbor - f_st;
 			cur_dist = distanceV.len();
 
 			if (cur_dist < m_dist) {
 				m_dist = cur_dist;
-				min_p = neighP + neighbor;
+				//min_p = neighP + neighbor;
 			}
 		}
 	}
-	KT::vec3 output_color;
-	output_color[0] = 1.0f - m_dist;
+	KT::vec3 output_color(0.0f);
+	/*output_color[0] = 1.0f - m_dist;
 	output_color[1] = 1.0f - m_dist;
 	output_color[2] = 1.0f - m_dist;
 
 	output_color[0] -= abs(sin(40.0 * m_dist / 2)) * 0.1;
 	output_color[1] -= abs(sin(40.0 * m_dist / 2)) * 0.1;
-	output_color[2] -= abs(sin(40.0 * m_dist / 2)) * 0.1;
-
+	output_color[2] -= abs(sin(40.0 * m_dist / 2)) * 0.1;*/
 	
+	output_color[0] = 1.0f - m_dist;
+	output_color[1] = 1.0f - m_dist;
+	output_color[2] = 1.0f - m_dist;
+	if (output_color[0] < 0.02f) {
+		output_color = KT::vec3(1.0f, 1.0f, 1.0f);
+	}
 	return output_color * albedo;
 }
 
 KT::vec3 image_texture::getColor(float u, float v, const KT::vec3& hitpoint) const
 {
+
 	return KT::vec3();
 }

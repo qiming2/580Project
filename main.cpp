@@ -8,6 +8,8 @@
 #include "Camera.hpp"
 #include "Tracer.hpp"
 #include "util.hpp"
+#include "stb_image_write.h"
+#include "stb_image.h"
 
 using namespace KT;
 using namespace std;
@@ -88,28 +90,34 @@ int main() {
 	auto material2 = make_shared<lambertian>(water_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
 
-	//auto material3 = make_shared<lambertian>(checker);
+	auto material3 = make_shared<lambertian>(water_tex);
 	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
-	float length = 1;
-	vec3 ta = { -length, 0, length };
-	vec3 tb = { length, 0, length };
-	vec3 tc = { -length, 0, -length };
-
-	vec3 td = { length, 0, -length };
-	auto tri1 = make_shared<Triangle>(tb, tc, ta);
+	float length = 3;
+	vec3 ta = { 0, -length,   length, };
+	vec3 tb = { 0,  length,   length, };
+	vec3 tc = { 0, -length,  -length, };
+	vec3 td = { 0,  length,  -length, };
+	auto tri1 = make_shared<Triangle>(ta, tc, tb);
 	tri1->m_uv_data[0] = { 1, 1, 0 };
-	tri1->m_uv_data[1] = { 0, 1, 0 };
-	tri1->m_uv_data[2] = { 0, 0, 0 };
-	surf_man.Add(tri1);
+	tri1->m_uv_data[1] = { 0, 0, 0 };
+	tri1->m_uv_data[2] = { 0, 1, 0 };
+	tri1->mat_ptr = material3;
+
+	//surf_man.Add(tri1);
 
 	auto tri2 = make_shared<Triangle>(tb, tc, td);
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 0, 0 };
-	surf_man.Add(tri2);
+	tri2->mat_ptr = material3;
+	//surf_man.Add(tri2);
 
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
+	/*unsigned char* img = stbi_load(temp_src_path.c_str(), &width, &height, &channels, 0);
+	if (img == NULL) {
+		printf("Error in loading the image file Name: %s\n", temp_src_path.c_str());
+	}*/
 
 
 	//////////////////////////////// Test Scene End /////////////////
@@ -166,6 +174,8 @@ int main() {
 	// output a simple ppm image
 	static bool output = true;
 	if (output) {
+		int channels;
+		int width, height;
 		const int dimx = image_width, dimy = image_height;
 		ofstream ofs("trace.ppm");
 		ofs << "P3" << endl << dimx << " " << dimy << endl << "255" << endl;
@@ -183,7 +193,18 @@ int main() {
 				ofs << r  << " " << g << " " << b << " ";
 			}
 		}
+
 		ofs.close();
+		unsigned char* img = stbi_load("Texture/usc1.png", &width, &height, &channels, 0);
+		if (img == NULL) {
+			printf("Error in loading the image file Name: %s\n", "trace.ppm");
+		} else {
+			cout << "width: " << width << " height: " << height << " channels: " << channels << endl;
+			stbi_image_free(img);
+		}
+		if (stbi_write_jpg("trace.jpg", image_width, image_height, 3, image, 100) == 0) {
+			printf("Error in writing the image");
+		}
 
 	}
 	delete[] image;

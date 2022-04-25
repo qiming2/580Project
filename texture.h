@@ -38,7 +38,7 @@ public:
 
 public:
 	KT::vec3* data;
-	int size;
+	int width, height;
 };
 
 class water_texture : public texture {
