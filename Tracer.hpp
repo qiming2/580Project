@@ -3,6 +3,7 @@
 #include "580math.hpp"
 #include "Camera.hpp"
 #include "Material.h"
+#include "BVH.h"
 
 namespace KT {
 	class Record;
@@ -35,6 +36,7 @@ namespace KT {
 	class Surface {
 	public:
 		virtual Record intersection(const ray& r) const { return {}; };
+		virtual bool bbox(AABB& out_box) { return {}; };
 	};
 
 	class Sphere : public Surface {
@@ -44,7 +46,7 @@ namespace KT {
 		
 		std::shared_ptr<material> mat_ptr;
 		virtual Record intersection(const ray& r) const override;
-		
+		virtual bool bbox(AABB& out_box);
 		friend std::ostream& operator<<(std::ostream& out, const Sphere& s);
 		static void getUV(const vec3& point, float& u, float& v);
 	public:
@@ -87,7 +89,7 @@ namespace KT {
 		Triangle() {};
 		Triangle(const vec3& a, const vec3& b, const vec3& c) : m_a(a), m_b(b), m_c(c) {}
 		virtual Record intersection(const ray& r) const override;
-		
+		virtual bool bbox(AABB& out_box);
 		friend std::ostream& operator<<(std::ostream& out, const Triangle& s);
 	};
 	std::ostream& operator<<(std::ostream& out, const Triangle& s);

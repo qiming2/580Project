@@ -73,6 +73,15 @@ KT::Record KT::Sphere::intersection(const ray& r) const
 	return record;
 }
 
+bool KT::Sphere::bbox(AABB& out_box)
+{
+	out_box = AABB(
+		m_o - vec3(m_r, m_r, m_r),
+		m_o + vec3(m_r, m_r, m_r)
+	);
+	return true;
+}
+
 std::ostream& KT::operator<<(std::ostream& out, const KT::Sphere& s)
 {
 	out << "Origin: " << s.m_o << " Radius: " << s.m_r;
@@ -290,11 +299,31 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	ret.u = ((1.0f - u - v) * m_uv_data[2][0] + u * m_uv_data[0][0] + v * m_uv_data[1][0]);
 	ret.v = ((1.0f - u - v) * m_uv_data[2][1] + u * m_uv_data[0][1] + v * m_uv_data[1][1]);
 	ret.m_color = vec3(ret.u, ret.v, 0.0f);
-	ret.m_normal = v0v2.cross(v0v1);
-	//ret.m_normal = normap->getColor(ret.u, ret.v, hitpoint);
+	//ret.m_normal = v0v2.cross(v0v1);
+	ret.m_normal = normap->getColor(ret.u, ret.v, hitpoint);
 	ret.m_normal.normalize();
 	/*ret.m_color = ret.m_normal;*/
 	return ret;
+}
+
+bool KT::Triangle::bbox(AABB& out_box)
+{
+	vec3 minP(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+	vec3 maxP(std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min());
+	for (size_t i = 0; i < 3; ++i) {
+		for (size_t j = 0; j < 3; ++j) {
+			minP[i] = fmin(m_data[j][i], minP[i]);
+			maxP[i] = fmax(m_data[j][i], maxP[i]);
+		}
+
+		// prevent axis-aligned triangle
+		if (minP[i] + EPSILON >= maxP[i]) {
+			minP[i] = maxP[i] - 0.1f;
+			maxP[i] = minP[i] + 0.2f;
+		}
+	}
+	out_box = AABB(minP, maxP);
+	return true;
 }
 
 
