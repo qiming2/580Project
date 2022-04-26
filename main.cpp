@@ -39,7 +39,7 @@ size_t max_depth = 20;
 
 
 // AA param
-const static size_t samples_per_pixel = 3;
+const static size_t samples_per_pixel = 1;
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -79,13 +79,13 @@ int main() {
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
 
-	//surf_man.make_random_scene();
+	surf_man.make_random_scene();
 	auto usc_tex = make_shared<image_texture>("Texture/usc1.png");
 	auto lam_tex = make_shared<solid_color>(vec3(1.0, 1.0, 1.0));
 	auto material4 = make_shared<metal>(vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f), 0.0);
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
-	auto material2 = make_shared<lambertian>(checker);
+	auto material2 = make_shared<lambertian>(water_tex);
 	auto material3 = make_shared<lambertian>(usc_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(1, 1, 0), 1.0, material3));
 
@@ -95,13 +95,12 @@ int main() {
 	vec3* normap = genGersterWaveTexture(vec3(0.5, 0.5, 0), 1000);
 	std::shared_ptr<texture> normap_texture = make_shared<image_texture>(normap, 1000, 1000);
 	
-	/*
-	auto material2 = make_shared<lambertian>(water_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
+
+	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material3));
 
 	
 	
-	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
+	surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material4));
 	float length = 3;
 	vec3 ta = { -length ,0 ,  length };
 	vec3 tb = { length  , 0,  length };
@@ -113,7 +112,7 @@ int main() {
 	tri1->m_uv_data[0] = { 0, 0, 0 };
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 1, 0, 0 };
-	tri1->mat_ptr = material4;
+	tri1->mat_ptr = material2;
 
 	surf_man.Add(tri1);
 
@@ -122,9 +121,10 @@ int main() {
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 1, 0 };
-	tri2->mat_ptr = material4;
+	tri2->mat_ptr = material2;
 	surf_man.Add(tri2);
 
+	surf_man.construct_BVH();
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
 	/*unsigned char* img = stbi_load(temp_src_path.c_str(), &width, &height, &channels, 0);

@@ -145,7 +145,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="580math.hpp" />
-    <ClInclude Include="BVH.h" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="stb_image.h" />
@@ -155,7 +154,6 @@
     <ClInclude Include="util.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BVH.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />

@@ -1,11 +1,103 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include "Tracer.hpp"
+#include <time.h>
 #include "util.hpp"
 #include "texture.h"
+#include "Tracer.hpp"
+#include <algorithm>
+#define NOT_BVH_TEST 0
+
+namespace KT {
+	bool AABB::hit(const KT::ray& r) const
+	{
+		// check three axises
+		float t_min = -std::numeric_limits<float>::max();
+		float t_max = std::numeric_limits<float>::max();
+		for (size_t i = 0; i < 3; ++i) {
+			float invD = 1.0f / r.m_d[i];
+			float t0 = (minP[i] - r.m_o[i]) * invD;
+			float t1 = (maxP[i] - r.m_o[i]) * invD;
+			if (invD < 0.0f) std::swap(t0, t1);
+			t_min = fmax(t0, t_min);
+			t_max = fmin(t1, t_max);
+			if (t_max <= t_min) return false;
+		}
+
+		return true;
+	}
+
+
+	// Main BVH_node creation
+	BVH_Node::BVH_Node(std::vector<std::shared_ptr<Surface>> lists, size_t start, size_t end)
+	{
+		
+		int axis = random_int(0, 2);
+		
+
+		// comparator declaration
+		bool (*comparator)(const std::shared_ptr<Surface> a, const std::shared_ptr<Surface> b);
+
+		comparator = (axis == 0) ? box_x_compare
+			: (axis == 1) ? box_y_compare
+			: box_z_compare;
+
+		size_t surface_range = end - start;
+
+		// special cases
+		if (surface_range == 1) {
+			left = right = lists[start];
+		}
+		else if (surface_range == 2) {
+			left = lists[start];
+			right = lists[start + 1];
+		}
+		else {
+			// sort the range of surfaces depending selected axis
+			std::sort(lists.begin() + start, lists.begin() + end, comparator);
+			
+			// split into half for left and right
+			size_t mid = start + (end - start) / 2;
+			left = std::make_shared<BVH_Node>(lists, start, mid);
+			right = std::make_shared<BVH_Node>(lists, mid, end);
+		}
+
+		AABB lb, rb;
+
+		if (!left->bbox(lb) || !right->bbox(rb)) {
+			std::cerr << "NO BOUNDING BOX" << std::endl;
+		}
+		
+		box = enclose_box(lb, rb);
+	}
 
 
 
+	Record BVH_Node::intersection(const ray& r) const
+	{
+		Record ret;
+		if (!box.hit(r)) return ret;
+
+		ret = left->intersection(r);
+		Record intersect_right = right->intersection(r);
+		if (ret.m_surf && intersect_right.m_surf) {
+			return ret.m_t < intersect_right.m_t ? ret : intersect_right;
+		}
+
+		if (intersect_right.m_surf) {
+			return intersect_right;
+		}
+		else {
+			return ret;
+		}
+	}
+
+	bool BVH_Node::bbox(AABB& out_box) const
+	{
+		out_box = box;
+		return true;
+	}
+
+}
 KT::Record::Record(Surface* surf, const vec3& norm, float t) :m_surf(surf), m_normal(norm), m_t(t)
 {
 
@@ -15,6 +107,7 @@ KT::Record::Record():m_t(std::numeric_limits<float>::infinity())
 {
 
 }
+
 
 KT::Record::Record(Surface* surf, float t) : m_surf(surf), m_t(t)
 {
@@ -73,9 +166,9 @@ KT::Record KT::Sphere::intersection(const ray& r) const
 	return record;
 }
 
-bool KT::Sphere::bbox(AABB& out_box)
+bool KT::Sphere::bbox(KT::AABB& out_box) const
 {
-	out_box = AABB(
+	out_box = KT::AABB(
 		m_o - vec3(m_r, m_r, m_r),
 		m_o + vec3(m_r, m_r, m_r)
 	);
@@ -112,8 +205,8 @@ void KT::SurfaceManager::make_random_scene()
 	Add(make_shared<Sphere>(point3(0, -1000, 0), 1000, ground_material));
 
 
-	for (int a = -1; a < 1; a++) {
-		for (int b = -1; b < 1; b++) {
+	for (int a = -5; a < 5; a++) {
+		for (int b = -5; b < 5; b++) {
 			auto choose_mat = random_double();
 			point3 center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
 
@@ -163,6 +256,11 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 	if (level == max_level) return ret;
 
 
+	
+
+#if NOT_BVH_TEST
+	clock_t start, stop;
+	start = clock();
 	Record record;
 
 	for (size_t i = 0; i < surfaces.size(); ++i) {
@@ -171,6 +269,15 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 			ret = record;
 		}
 	}
+	stop = clock();
+	print("One Ray took: ", (double)(stop - start) / CLOCKS_PER_SEC);
+#else 
+	//clock_t start, stop;
+	//start = clock();
+	ret  = cur.intersection(r);
+	//stop = clock();
+	//print("One Ray took: ", (double)(stop - start) / CLOCKS_PER_SEC);
+#endif
 
 	if (ret.m_surf) {
 		ray scattered;
@@ -201,9 +308,47 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 	return ret;
 }
 
+void KT::SurfaceManager::construct_BVH()
+{
+	cur = BVH_Node(surfaces, 0, surfaces.size());
+}
+
+bool KT::SurfaceManager::bbox(AABB& out_box)
+{
+	if (surfaces.empty()) return false;
+
+	AABB cur_box;
+	bool first = true;
+
+	for (std::shared_ptr<Surface>& surface : surfaces) {
+		// Edge cases
+		if (!surface->bbox(cur_box)) return false;
+		out_box = first ? cur_box : enclose_box(out_box, cur_box);
+		first = false;
+	}
+
+	return true;
+}
+
 KT::SurfaceManager::SurfaceManager()
 {
 
+}
+
+KT::AABB KT::enclose_box(const AABB& b0, const AABB& b1)
+{
+	vec3 small = vec3(
+		fmin(b0.minP[0], b1.minP[0]),
+		fmin(b0.minP[1], b1.minP[1]),
+		fmin(b0.minP[2], b1.minP[2])
+	);
+
+	vec3 big = vec3(
+		fmax(b0.maxP[0], b1.maxP[0]),
+		fmax(b0.maxP[1], b1.maxP[1]),
+		fmax(b0.maxP[2], b1.maxP[2])
+	);
+	return AABB(small, big);
 }
 
 // This version is more prone to mistakes considering there
@@ -306,7 +451,7 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	return ret;
 }
 
-bool KT::Triangle::bbox(AABB& out_box)
+bool KT::Triangle::bbox(AABB& out_box) const
 {
 	vec3 minP(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 	vec3 maxP(std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min());

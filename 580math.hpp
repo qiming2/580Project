@@ -13,19 +13,22 @@
 #define DTOR(x) ((x) / 180.0f * M_PI)
 
 namespace KT {
-	inline int random_int(int imin, int imax) {
-		return imin + (rand() * (imax - imin) / RAND_MAX);
-	}
-
 	inline double random_double() {
 		// returns a random real in [0, 1)
 		return rand() / (RAND_MAX + 1.0);
 	}
-
 	inline double random_double(double dmin, double dmax) {
 		// returns a random real in [dmin, dmax]
 		return dmin + (dmax - dmin) * random_double();
 	}
+
+	inline int random_int(int imin, int imax) {
+		return static_cast<int>(random_double(imin, imax + 1));
+	}
+
+	
+
+	
 	struct vec3
 	{
 		union {

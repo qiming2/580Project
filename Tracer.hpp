@@ -3,11 +3,23 @@
 #include "580math.hpp"
 #include "Camera.hpp"
 #include "Material.h"
-#include "BVH.h"
 
 namespace KT {
+	class AABB;
 	class Record;
 	class Surface;
+	class AABB {
+	public:
+		AABB() {}
+		AABB(const KT::vec3& a, const KT::vec3& b) : minP(a), maxP(b) {}
+		bool hit(const KT::ray& r) const;
+
+		KT::vec3 minP;
+		KT::vec3 maxP;
+	};
+
+	
+
 	class Record {
 	public:
 		vec3 m_color;
@@ -36,7 +48,7 @@ namespace KT {
 	class Surface {
 	public:
 		virtual Record intersection(const ray& r) const { return {}; };
-		virtual bool bbox(AABB& out_box) { return {}; };
+		virtual bool bbox(AABB& out_box) const { return {}; };
 	};
 
 	class Sphere : public Surface {
@@ -46,7 +58,7 @@ namespace KT {
 		
 		std::shared_ptr<material> mat_ptr;
 		virtual Record intersection(const ray& r) const override;
-		virtual bool bbox(AABB& out_box);
+		virtual bool bbox(AABB& out_box) const override;
 		friend std::ostream& operator<<(std::ostream& out, const Sphere& s);
 		static void getUV(const vec3& point, float& u, float& v);
 	public:
@@ -89,13 +101,24 @@ namespace KT {
 		Triangle() {};
 		Triangle(const vec3& a, const vec3& b, const vec3& c) : m_a(a), m_b(b), m_c(c) {}
 		virtual Record intersection(const ray& r) const override;
-		virtual bool bbox(AABB& out_box);
+		virtual bool bbox(AABB& out_box) const override;
 		friend std::ostream& operator<<(std::ostream& out, const Triangle& s);
 	};
 	std::ostream& operator<<(std::ostream& out, const Triangle& s);
 	// Surface Manager: Contains all necessary object data necessary for doing
 	// intersection test
 	// Singleton class
+	class BVH_Node : public Surface {
+	public:
+		BVH_Node() {};
+		BVH_Node(std::vector<std::shared_ptr<Surface>> lists, size_t start, size_t end);
+		virtual Record intersection(const ray& r) const override;
+		virtual bool bbox(AABB& out_box) const override;
+	public:
+		std::shared_ptr<Surface> left;
+		std::shared_ptr<Surface> right;
+		AABB box;
+	};
 	class SurfaceManager {
 
 	public:
@@ -107,11 +130,42 @@ namespace KT {
 		void operator=(const SurfaceManager&) = delete;
 		SurfaceManager(const SurfaceManager&) = delete;
 		friend std::ostream& operator<<(std::ostream& out, const SurfaceManager& surfman);
+		void construct_BVH();
+		virtual bool bbox(AABB& out_box);
+	public:
+		std::vector<std::shared_ptr<Surface>> surfaces;
 	private:
 		// static SurfaceManager* instance;
-		std::vector<std::shared_ptr<Surface>> surfaces;
+		BVH_Node cur;
 		float castShadow(const vec3& point, const vec3& lightDir) const;
 		SurfaceManager();
 	};
 	std::ostream& operator<<(std::ostream& out, const SurfaceManager& surfman);
+
+	
+	
+	inline bool box_compare(const std::shared_ptr<Surface> a, const std::shared_ptr<Surface> b, int axis) {
+		AABB ba;
+		AABB bb;
+
+		if (!a->bbox(ba) || !b->bbox(bb)) {
+			std::cerr << "NO BOUNDING BOX IN BVH NODE" << std::endl;
+		}
+
+		return ba.minP[axis] < bb.minP[axis];
+	}
+
+	inline bool box_x_compare(const std::shared_ptr<Surface> a, const std::shared_ptr<Surface> b) {
+		return box_compare(a, b, 0);
+	}
+
+	inline bool box_y_compare(const std::shared_ptr<Surface> a, const std::shared_ptr<Surface> b) {
+		return box_compare(a, b, 1);
+	}
+
+	inline bool box_z_compare(const std::shared_ptr<Surface> a, const std::shared_ptr<Surface> b) {
+		return box_compare(a, b, 2);
+	}
+
+	AABB enclose_box(const AABB& b0, const AABB& b1);
 }
