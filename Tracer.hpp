@@ -5,7 +5,6 @@
 #include "Material.h"
 
 namespace KT {
-	class AABB;
 	class Record;
 	class Surface;
 	class AABB {
@@ -18,7 +17,7 @@ namespace KT {
 		KT::vec3 maxP;
 	};
 
-	
+
 
 	class Record {
 	public:
@@ -40,7 +39,7 @@ namespace KT {
 			front_face = dot(r.m_d, outward_normal) < 0.0f;
 			m_normal = front_face ? outward_normal : -outward_normal;
 		}
-		
+
 		friend std::ostream& operator<<(std::ostream& out, const Record& s);
 	};
 	std::ostream& operator<<(std::ostream& out, const Record& s);
@@ -55,7 +54,7 @@ namespace KT {
 	public:
 		Sphere() {};
 		Sphere(const vec3& o, const float& r, std::shared_ptr<material> mat) : m_o(o), m_r(r), mat_ptr(mat) {}
-		
+
 		std::shared_ptr<material> mat_ptr;
 		virtual Record intersection(const ray& r) const override;
 		virtual bool bbox(AABB& out_box) const override;
@@ -146,8 +145,8 @@ namespace KT {
 	};
 	std::ostream& operator<<(std::ostream& out, const SurfaceManager& surfman);
 
-	
-	
+
+
 	inline bool box_compare(const std::shared_ptr<Surface> a, const std::shared_ptr<Surface> b, int axis) {
 		AABB ba;
 		AABB bb;

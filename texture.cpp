@@ -1,6 +1,6 @@
 #include "texture.h"
 #include "580math.hpp"
-#include <math.h> 
+#include <math.h>
 #include "stb_image.h"
 solid_color::solid_color(KT::vec3 _color_val)
 {
@@ -138,7 +138,7 @@ KT::vec3 water_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 			point neighP = random2(p);
 
 			// we can use sin wave to animate the cell
-			
+
 			neighP.x = 0.5 + 0.5 * sin((double)neighP.x * 2 * 3.1415926);
 			neighP.y = 0.5 + 0.5 * sin((double)neighP.y * 2 * 3.1415926);
 
@@ -159,7 +159,7 @@ KT::vec3 water_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 	output_color[0] -= abs(sin(40.0 * m_dist / 2)) * 0.1;
 	output_color[1] -= abs(sin(40.0 * m_dist / 2)) * 0.1;
 	output_color[2] -= abs(sin(40.0 * m_dist / 2)) * 0.1;*/
-	
+
 	output_color[0] = 1.0f - m_dist;
 	output_color[1] = 1.0f - m_dist;
 	output_color[2] = 1.0f - m_dist;
@@ -209,7 +209,7 @@ image_texture::image_texture(std::string image_dir)
 
 KT::vec3 image_texture::getColor(float u, float v, const KT::vec3& hitpoint) const
 {
-	KT::vec3 color = (0, 0, 0);
+	KT::vec3 color = KT::vec3(0, 0, 0);
 	float x = u * (width - 1);
 	float y = v * (height - 1);
 
@@ -269,7 +269,7 @@ cube_map::cube_map(const std::string& cube_dir)
 		std::shared_ptr<texture> cur_tex = std::make_shared<image_texture>(cube_dir + faces_dir[i]);
 		texs.push_back(cur_tex);
 	}
-	
+
 }
 
 KT::vec3 cube_map::getColor(const KT::vec3& v)

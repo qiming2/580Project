@@ -78,15 +78,15 @@ int main() {
 	//////////////////////////////// Test Scene End /////////////////
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
-	surf_man.set_env_map("Texture/NiagaraFalls2/");
+	surf_man.set_env_map("Texture/Lycksele/");
 	//surf_man.make_random_scene();
 	auto usc_tex = make_shared<image_texture>("Texture/usc1.png");
 	auto lam_tex = make_shared<solid_color>(vec3(1.0, 1.0, 1.0));
 	std::shared_ptr<texture> water_color = make_shared<solid_color>(vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f));
 	auto material4 = make_shared<metal>(water_color, 0.0);
 	std::shared_ptr<material> light_mat = make_shared<emitter>(lam_tex);
-	auto water_material = make_shared<dielectric>(1.5);
-	water_material->albedo = vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f);
+	auto water_material = make_shared<dielectric>(1.33);
+	water_material->albedo = vec3(1.0f);
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
 	auto material2 = make_shared<lambertian>(water_tex);
@@ -94,29 +94,29 @@ int main() {
 	surf_man.Add(make_shared<Sphere>(vec3(-2.5, 1, 0), 1.0, material3));
 
 	surf_man.Add(make_shared<Sphere>(vec3(2.5, 1, 0), 1.0, material4));
-	
+
 	surf_man.Add(make_shared<Sphere>(vec3(0, 1, 0), 1.0, light_mat));
-	float length = 20;
+	float length = 30;
 	vec3 ta = { -length , -1 ,  length };
 	vec3 tb = { length  , -1,  length };
 	vec3 tc = { -length , -1 , -length };
-						  
+
 	vec3 td = { length  , -1, -length };
 	auto tri1 = make_shared<Triangle>(tb, ta, tc);
-	
+
 	tri1->m_uv_data[0] = { 0, 0, 0 };
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 1, 0, 0 };
-	tri1->mat_ptr = material3;
-	//tri1->mat_ptr = water_material;
+	//tri1->mat_ptr = material3;
+	tri1->mat_ptr = water_material;
 	auto tri2 = make_shared<Triangle>(tc, td, tb);
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 1, 0 };
-	tri2->mat_ptr = material3;
-	//tri2->mat_ptr = water_material;
+	//tri2->mat_ptr = material3;
+	tri2->mat_ptr = water_material;
 
-	float texCount = 8;
+	size_t texCount = 8;
 	tri1->normap = new std::shared_ptr<texture>[texCount];
 	tri2->normap = new std::shared_ptr<texture>[texCount];
 	for (int i = 0; i < texCount; i++) {
@@ -126,10 +126,10 @@ int main() {
 		tri2->normap[i] = normap_texture;
 	}
 
-	surf_man.Add(tri1);
-	surf_man.Add(tri2);
+	//surf_man.Add(tri1);
+	//surf_man.Add(tri2);
 
-	
+
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
 	/*unsigned char* img = stbi_load(temp_src_path.c_str(), &width, &height, &channels, 0);
@@ -140,7 +140,7 @@ int main() {
 
 	//////////////////////////////// Test Scene End /////////////////
 
-	vec3 lookfrom(0, 3, 10);
+	vec3 lookfrom(0, 4, -10);
 	vec3 lookat(0, 0, 0);
 	vec3 vup(0, 1, 0);
 	auto dist_to_focus = (lookfrom - lookat).len();
@@ -154,7 +154,7 @@ int main() {
 
 	/////////////////////////////////////// Ray Trace Core ////////////////////////////////////////////
 	surf_man.construct_BVH();
-	surf_man.have_background = true;
+	surf_man.have_background = false;
 	for (size_t y = 0; y < image_height; ++y) {
 		for (size_t x = 0; x < image_width; ++x) {
       output_color = vec3(0.0f);
@@ -170,22 +170,22 @@ int main() {
 			if (record.m_surf) {
 				output_color += record.m_color * (1.0f / (float)samples_per_pixel);
 
-			} 
+			}
 			// Sampling environment map
 			else {
 				vec3 sample_dir = cam.getRawDir((float(x) + 0.5f) / (float)(image_width - 1), (float(y) + 0.5f) / (float)(image_height - 1));
 				output_color += surf_man.getEnvColor(sample_dir) * (1.0f / (float)samples_per_pixel);
 			}
-			
 
-				//print(output_color);
-				// Note: y * Width * 3 since we have width * 3 floats in a row!
-				index = y * image_width * 3 + x * 3;
-				// gamma correction
-				image[index] =	   sqrtf(output_color.m_x);
-				image[index + 1] = sqrtf(output_color.m_y);
-				image[index + 2] = sqrtf(output_color.m_z);
+
 			}
+			//print(output_color);
+			// Note: y * Width * 3 since we have width * 3 floats in a row!
+			index = y * image_width * 3 + x * 3;
+			// gamma correction
+			image[index] =	   sqrtf(output_color.m_x);
+			image[index + 1] = sqrtf(output_color.m_y);
+			image[index + 2] = sqrtf(output_color.m_z);
 		}
 	}
 	stop = clock();
