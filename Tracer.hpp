@@ -135,6 +135,7 @@ namespace KT {
 		vec3 getEnvColor(const vec3& dir);
 		virtual bool bbox(AABB& out_box);
 	public:
+		bool have_background;
 		std::vector<std::shared_ptr<Surface>> surfaces;
 	private:
 		// static SurfaceManager* instance;

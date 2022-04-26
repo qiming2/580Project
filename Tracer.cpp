@@ -309,12 +309,13 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 
 	// background color sampling environment map
 	vec3 unitDir = normalize(r.m_d);
-	if (env_map) {
+	if (env_map && !have_background) {
 		ret.m_color = env_map->getColor(unitDir);
 	}
 	else {
-		float t = 0.5f * (unitDir.m_y + 1.0f);
-		ret.m_color = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
+		/*float t = 0.5f * (unitDir.m_y + 1.0f);
+		ret.m_color = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);*/
+		ret.m_color = vec3(0.0f);
 	}
 	
 
@@ -334,7 +335,7 @@ void KT::SurfaceManager::set_env_map(const std::string& dir)
 
 KT::vec3 KT::SurfaceManager::getEnvColor(const KT::vec3& dir)
 {
-	if (env_map) {
+	if (env_map && !have_background) {
 		return env_map->getColor(dir);
 	}
 

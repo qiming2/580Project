@@ -78,7 +78,7 @@ int main() {
 	//////////////////////////////// Test Scene End /////////////////
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
-	surf_man.set_env_map("Texture/Lycksele/");
+	surf_man.set_env_map("Texture/NiagaraFalls2/");
 	//surf_man.make_random_scene();
 	auto usc_tex = make_shared<image_texture>("Texture/usc1.png");
 	auto lam_tex = make_shared<solid_color>(vec3(1.0, 1.0, 1.0));
@@ -91,16 +91,11 @@ int main() {
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
 	auto material2 = make_shared<lambertian>(water_tex);
 	auto material3 = make_shared<lambertian>(usc_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(-1, 1, 0), 1.0, material3));
+	surf_man.Add(make_shared<Sphere>(vec3(-2.5, 1, 0), 1.0, material3));
 
-
-	/*
-	auto material2 = make_shared<lambertian>(water_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
-
+	surf_man.Add(make_shared<Sphere>(vec3(2.5, 1, 0), 1.0, material4));
 	
-	
-	//surf_man.Add(make_shared<Sphere>(vec3(2, 1, 0), 1.0, light_mat));
+	surf_man.Add(make_shared<Sphere>(vec3(0, 1, 0), 1.0, light_mat));
 	float length = 20;
 	vec3 ta = { -length , -1 ,  length };
 	vec3 tb = { length  , -1,  length };
@@ -112,14 +107,14 @@ int main() {
 	tri1->m_uv_data[0] = { 0, 0, 0 };
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 1, 0, 0 };
-	tri1->mat_ptr = material4;
-	tri1->mat_ptr = water_material;
+	tri1->mat_ptr = material3;
+	//tri1->mat_ptr = water_material;
 	auto tri2 = make_shared<Triangle>(tc, td, tb);
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 1, 0 };
-	tri2->mat_ptr = material4;
-	tri2->mat_ptr = water_material;
+	tri2->mat_ptr = material3;
+	//tri2->mat_ptr = water_material;
 
 	float texCount = 8;
 	tri1->normap = new std::shared_ptr<texture>[texCount];
@@ -131,8 +126,8 @@ int main() {
 		tri2->normap[i] = normap_texture;
 	}
 
-	//surf_man.Add(tri1);
-	//surf_man.Add(tri2);
+	surf_man.Add(tri1);
+	surf_man.Add(tri2);
 
 	
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
@@ -145,7 +140,7 @@ int main() {
 
 	//////////////////////////////// Test Scene End /////////////////
 
-	vec3 lookfrom(0, 0, -10);
+	vec3 lookfrom(0, 3, 10);
 	vec3 lookat(0, 0, 0);
 	vec3 vup(0, 1, 0);
 	auto dist_to_focus = (lookfrom - lookat).len();
@@ -159,6 +154,7 @@ int main() {
 
 	/////////////////////////////////////// Ray Trace Core ////////////////////////////////////////////
 	surf_man.construct_BVH();
+	surf_man.have_background = true;
 	for (size_t y = 0; y < image_height; ++y) {
 		for (size_t x = 0; x < image_width; ++x) {
       output_color = vec3(0.0f);
