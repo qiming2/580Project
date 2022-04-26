@@ -5,7 +5,7 @@
 #include "texture.h"
 #include "Tracer.hpp"
 #include <algorithm>
-#define NOT_BVH_TEST 0
+#define USE_BVH 1
 
 namespace KT {
 	bool AABB::hit(const KT::ray& r) const
@@ -44,7 +44,11 @@ namespace KT {
 		size_t surface_range = end - start;
 
 		// special cases
-		if (surface_range == 1) {
+		if (surface_range == 0) {
+			box = AABB(vec3(1.0f), vec3(-1.0f));
+			return;
+		}
+		else if (surface_range == 1) {
 			left = right = lists[start];
 		}
 		else if (surface_range == 2) {
@@ -223,7 +227,7 @@ void KT::SurfaceManager::make_random_scene()
 				}
 				else if (choose_mat < 0.95) {
 					// metal
-					auto albedo = color::random(0.5, 1);
+					auto albedo = make_shared<solid_color>(color::random(0.5, 1));
 					auto fuzz = random_double(0, 0.5);
 					sphere_material = make_shared<metal>(albedo, fuzz);
 					Add(make_shared<Sphere>(center, 0.2, sphere_material));
@@ -243,7 +247,8 @@ void KT::SurfaceManager::make_random_scene()
     auto material2 = make_shared<lambertian>(lam_tex);
     Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));
 
-    auto material3 = make_shared<metal>(vec3(0.7, 0.6, 0.5), 0.0);
+	auto metal_tex = make_shared<solid_color>(vec3(0.7, 0.6, 0.5));
+    auto material3 = make_shared<metal>(metal_tex, 0.0);
     Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
 
 }
@@ -258,7 +263,13 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 
 	
 
-#if NOT_BVH_TEST
+#if USE_BVH
+	//clock_t start, stop;
+	//start = clock();
+	ret = cur.intersection(r);
+	//stop = clock();
+	//print("One Ray took: ", (double)(stop - start) / CLOCKS_PER_SEC);
+#else 
 	clock_t start, stop;
 	start = clock();
 	Record record;
@@ -271,12 +282,6 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 	}
 	stop = clock();
 	print("One Ray took: ", (double)(stop - start) / CLOCKS_PER_SEC);
-#else 
-	//clock_t start, stop;
-	//start = clock();
-	ret  = cur.intersection(r);
-	//stop = clock();
-	//print("One Ray took: ", (double)(stop - start) / CLOCKS_PER_SEC);
 #endif
 
 	if (ret.m_surf) {
@@ -291,26 +296,49 @@ KT::Record KT::SurfaceManager::intersection(const ray& r, size_t level, size_t m
 			//ret.m_color = vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f);
 			return ret;
 		} else if (ret.mat_ptr->scatter(r, ret, attenuation, scattered)) {
-			ret.m_color = attenuation * intersection(scattered, level + 1, max_level, c).m_color;
+			vec3 hitpoint = r.eval(ret.m_t);
+			ret.m_color = ret.mat_ptr->emit(ret.u, ret.v, hitpoint);
+			ret.m_color += attenuation * intersection(scattered, level + 1, max_level, c).m_color;
 			return ret;
 		}
 
-
-		ret.m_color = vec3(0.0f);
+		vec3 hitpoint = r.eval(ret.m_t);
+		ret.m_color = ret.mat_ptr->emit(ret.u, ret.v, hitpoint);
 		return ret;
 	}
 
-	// background color
+	// background color sampling environment map
 	vec3 unitDir = normalize(r.m_d);
-	float t = 0.5f * (unitDir.m_y + 1.0f);
-	ret.m_color = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
+	if (env_map) {
+		ret.m_color = env_map->getColor(unitDir);
+	}
+	else {
+		float t = 0.5f * (unitDir.m_y + 1.0f);
+		ret.m_color = (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
+	}
+	
 
+	
 	return ret;
 }
 
 void KT::SurfaceManager::construct_BVH()
 {
 	cur = BVH_Node(surfaces, 0, surfaces.size());
+}
+
+void KT::SurfaceManager::set_env_map(const std::string& dir)
+{
+	env_map = std::make_shared<cube_map>(dir);
+}
+
+KT::vec3 KT::SurfaceManager::getEnvColor(const KT::vec3& dir)
+{
+	if (env_map) {
+		return env_map->getColor(dir);
+	}
+
+	return KT::vec3(0.0f);
 }
 
 bool KT::SurfaceManager::bbox(AABB& out_box)

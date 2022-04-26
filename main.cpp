@@ -39,7 +39,7 @@ size_t max_depth = 20;
 
 
 // AA param
-const static size_t samples_per_pixel = 4;
+const static size_t samples_per_pixel = 10;
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -55,7 +55,7 @@ int main() {
 	// 0. Camera
 
 	// 1. Generating rays (Only implementing Perspective, orthogonal would be easy if finished perspective)
-	vec3 background(0.5, 0.7, 1.0);
+	vec3 background(0.0, 0.7, 1.0);
 	size_t index = 0;
 	float r, g, b;
 	float* image = new float[image_height *image_width * 3];
@@ -78,49 +78,48 @@ int main() {
 	//////////////////////////////// Test Scene End /////////////////
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
-
+	surf_man.set_env_map("Texture/Lycksele/");
 	//surf_man.make_random_scene();
 	auto usc_tex = make_shared<image_texture>("Texture/usc1.png");
 	auto lam_tex = make_shared<solid_color>(vec3(1.0, 1.0, 1.0));
-	auto material4 = make_shared<metal>(vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f), 0.0);
-	auto water_material = make_shared<dielectric>(0);
+	std::shared_ptr<texture> water_color = make_shared<solid_color>(vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f));
+	auto material4 = make_shared<metal>(water_color, 0.0);
+	std::shared_ptr<material> light_mat = make_shared<emitter>(lam_tex);
+	auto water_material = make_shared<dielectric>(1.5);
+	water_material->albedo = vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f);
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
 	auto material2 = make_shared<lambertian>(water_tex);
 	auto material3 = make_shared<lambertian>(usc_tex);
-	surf_man.Add(make_shared<Sphere>(vec3(1, 1, 0), 1.0, material3));
+	surf_man.Add(make_shared<Sphere>(vec3(-1, 1, 0), 1.0, material3));
 
 
-	
-
-
-	
 	/*
 	auto material2 = make_shared<lambertian>(water_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(-4, 1, 0), 1.0, material2));*/
 
 	
 	
-	surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
-	float length = 10;
-	vec3 ta = { -length ,0 ,  length };
-	vec3 tb = { length  , 0,  length };
-	vec3 tc = { -length ,0 , -length };
+	//surf_man.Add(make_shared<Sphere>(vec3(2, 1, 0), 1.0, light_mat));
+	float length = 20;
+	vec3 ta = { -length , -1 ,  length };
+	vec3 tb = { length  , -1,  length };
+	vec3 tc = { -length , -1 , -length };
 						  
-	vec3 td = { length  , 0, -length };
+	vec3 td = { length  , -1, -length };
 	auto tri1 = make_shared<Triangle>(tb, ta, tc);
 	
 	tri1->m_uv_data[0] = { 0, 0, 0 };
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 1, 0, 0 };
 	tri1->mat_ptr = material4;
-	//tri1->mat_ptr = water_material;
+	tri1->mat_ptr = water_material;
 	auto tri2 = make_shared<Triangle>(tc, td, tb);
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 1, 0 };
 	tri2->mat_ptr = material4;
-	//tri2->mat_ptr = water_material;
+	tri2->mat_ptr = water_material;
 
 	float texCount = 8;
 	tri1->normap = new std::shared_ptr<texture>[texCount];
@@ -132,10 +131,10 @@ int main() {
 		tri2->normap[i] = normap_texture;
 	}
 
-	surf_man.Add(tri1);
-	surf_man.Add(tri2);
+	//surf_man.Add(tri1);
+	//surf_man.Add(tri2);
 
-	surf_man.construct_BVH();
+	
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
 
 	/*unsigned char* img = stbi_load(temp_src_path.c_str(), &width, &height, &channels, 0);
@@ -146,12 +145,12 @@ int main() {
 
 	//////////////////////////////// Test Scene End /////////////////
 
-	vec3 lookfrom(0, 3, 12);
+	vec3 lookfrom(0, 0, -10);
 	vec3 lookat(0, 0, 0);
 	vec3 vup(0, 1, 0);
 	auto dist_to_focus = (lookfrom - lookat).len();
 	auto aperture = 0.1f;
-	Camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+	Camera cam(lookfrom, lookat, vup, 45.0f, aspect_ratio, aperture, dist_to_focus);
 
 	Record record;
 	vec3 output_color;
@@ -159,6 +158,7 @@ int main() {
 	start = clock();
 
 	/////////////////////////////////////// Ray Trace Core ////////////////////////////////////////////
+	surf_man.construct_BVH();
 	for (size_t y = 0; y < image_height; ++y) {
 		for (size_t x = 0; x < image_width; ++x) {
       output_color = vec3(0.0f);
@@ -171,11 +171,16 @@ int main() {
 		  cur_ray = cam.getRay(u, v);
   			// Shading inside
   			record = surf_man.intersection(cur_ray, 0, max_depth, cam);
-  			if (record.m_surf) {
-  				output_color += record.m_color*(1.0f/(float)samples_per_pixel);
-			} else {
-			  output_color += background*(1.0f/(float)samples_per_pixel);
+			if (record.m_surf) {
+				output_color += record.m_color * (1.0f / (float)samples_per_pixel);
+
+			} 
+			// Sampling environment map
+			else {
+				vec3 sample_dir = cam.getRawDir((float(x) + 0.5f) / (float)(image_width - 1), (float(y) + 0.5f) / (float)(image_height - 1));
+				output_color += surf_man.getEnvColor(sample_dir) * (1.0f / (float)samples_per_pixel);
 			}
+			
 
 				//print(output_color);
 				// Note: y * Width * 3 since we have width * 3 floats in a row!

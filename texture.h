@@ -31,6 +31,7 @@ public:
 
 class image_texture : public texture {
 public:
+	image_texture() {};
 	image_texture(KT::vec3* data, int width, int height);
 	~image_texture();
 	image_texture(std::string image_dir);
@@ -53,6 +54,29 @@ public:
 
 public:
 	KT::vec3 albedo;
+};
+
+namespace FACE {
+	enum face_index {
+		FRONT = 0x0,
+		BACK,
+		RIGHT,
+		LEFT,
+		UP,
+		DOWN,
+	};
+}
+
+
+class cube_map {
+public:
+	cube_map(const std::string& cube_dir);
+	
+	KT::vec3 getColor(const KT::vec3& v);
+private:
+	// face_index indicates the corresponding
+	// texture index that needs to be stored here
+	std::vector<std::shared_ptr<texture>> texs;
 };
 
 KT::vec3* genGersterWaveTexture(KT::vec3 windDir, int n);

@@ -131,12 +131,15 @@ namespace KT {
 		SurfaceManager(const SurfaceManager&) = delete;
 		friend std::ostream& operator<<(std::ostream& out, const SurfaceManager& surfman);
 		void construct_BVH();
+		void set_env_map(const std::string& dir);
+		vec3 getEnvColor(const vec3& dir);
 		virtual bool bbox(AABB& out_box);
 	public:
 		std::vector<std::shared_ptr<Surface>> surfaces;
 	private:
 		// static SurfaceManager* instance;
 		BVH_Node cur;
+		std::shared_ptr<cube_map> env_map;
 		float castShadow(const vec3& point, const vec3& lightDir) const;
 		SurfaceManager();
 	};

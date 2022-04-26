@@ -22,8 +22,13 @@ KT::Camera::Camera(vec3 origin, vec3 lookat, vec3 up, float vfov, float aspect_r
 	u = normalize(w.cross(up));
 	v = normalize(u.cross(w));
 	horizontal = focus_dist * viewport_width * u;
+	raw_horizontal = viewport_width * u;
+
 	vertical = focus_dist * viewport_height * v;
+	raw_vertical = viewport_height * v;
+
 	lower_left = origin - horizontal / 2.0f - vertical / 2.0f + w * focus_dist;
+	raw_lower_left = origin - raw_horizontal / 2.0f - raw_vertical / 2.0f + w * 0.5f;
 	lens_radius = aperture / 2.0f;
 }
 
@@ -35,3 +40,12 @@ KT::ray KT::Camera::getRay(float s, float t)
 	ret.m_d.normalize();
 	return ret;
 }
+
+KT::vec3 KT::Camera::getRawDir(float s, float t)
+{
+	vec3 ret = raw_lower_left + s * raw_horizontal + t * raw_vertical - origin;
+
+	return ret;
+}
+
+

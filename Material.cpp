@@ -20,7 +20,7 @@ namespace KT{
 		vec3 hitpoint = r.eval(rec.m_t);
 		vec3 reflected = reflect(r.m_d, rec.m_normal);
 		scattered = ray(hitpoint, reflected + fuzzy * vec3::random_unit_sphere());
-		attenuation = albedo;
+		attenuation = albedo->getColor(rec.u, rec.v, hitpoint);
 		// check whether reflection ray is on the same side of
 		// the normal
 		return (dot(scattered.m_d, rec.m_normal) > 0.0f);
@@ -29,7 +29,7 @@ namespace KT{
 	bool dielectric::scatter(const ray& r, const Record& rec, vec3& attenuation, ray& scattered) const {
 		vec3 hitpoint = r.eval(rec.m_t);
 		// no attenuation, glass-like object
-		attenuation = vec3(1.0f, 1.0f, 1.0f);
+		attenuation = albedo;
 
 		double index = rec.front_face ? (1.0 / ir) : ir;
 		vec3 unit_dir = normalize(r.m_d);

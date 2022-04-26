@@ -58,6 +58,10 @@ namespace KT {
 			return m_x * other.m_x + m_y * other.m_y + m_z * other.m_z;
 		}
 
+		vec3 abs() const {
+			return { fabs(data[0]), fabs(data[1]), fabs(data[2]) };
+		}
+
 		vec3 cross(const vec3& other) const {
 			return { m_y * other.m_z - other.m_y * m_z, m_z * other.m_x - m_x * other.m_z, m_x * other.m_y - m_y * other.m_x };
 		}

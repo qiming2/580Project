@@ -259,3 +259,45 @@ KT::vec3* genGersterWaveTexture(KT::vec3 windDir, int n)
 	}
 	return data;
 }
+
+cube_map::cube_map(const std::string& cube_dir)
+{
+	const std::vector<std::string> faces_dir = {
+		"posz.jpg", "negz.jpg", "posx.jpg", "negx.jpg", "posy.jpg", "negy.jpg"
+	};
+	for (size_t i = 0; i < faces_dir.size(); ++i) {
+		std::shared_ptr<texture> cur_tex = std::make_shared<image_texture>(cube_dir + faces_dir[i]);
+		texs.push_back(cur_tex);
+	}
+	
+}
+
+KT::vec3 cube_map::getColor(const KT::vec3& v)
+{
+	KT::vec3 vAbs= v.abs();
+	float ma;
+	KT::vec3 uv;
+	FACE::face_index faceIndex;
+	// Front or back face
+	if (vAbs.m_z >= vAbs.m_x && vAbs.m_z >= vAbs.m_y) {
+		faceIndex = v.m_z > 0.0f ? FACE::FRONT : FACE::BACK;
+		ma = 0.5f / vAbs.m_z;
+		uv = KT::vec3(v.m_z > 0.0f? -v.m_x : v.m_x, v.m_y, 0.0f);
+	}
+	// Up or down face
+	else if (vAbs.m_y >= vAbs.m_x) {
+		faceIndex = v.m_y > 0.0f ? FACE::UP : FACE::DOWN;
+		ma = 0.5f / vAbs.m_y;
+		uv = KT::vec3(-v.m_x, v.m_y > 0.0f ? -v.m_z : v.m_z, 0.0f);
+	}
+	// Right or left face
+	else {
+		faceIndex = v.m_x > 0.0f ? FACE::LEFT : FACE::RIGHT;
+		ma = 0.5f / vAbs.m_x;
+		uv = KT::vec3(v.m_x > 0.0f ? v.m_z : -v.m_z, v.m_y, 0.0f);
+	}
+
+	uv = ma * uv + 0.5f;
+
+	return texs[faceIndex]->getColor(uv[0], uv[1], KT::vec3(0.0f));
+}
