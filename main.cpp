@@ -39,7 +39,7 @@ size_t max_depth = 20;
 
 
 // AA param
-const static size_t samples_per_pixel = 1;
+const static size_t samples_per_pixel = 4;
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -79,7 +79,7 @@ int main() {
 
 	SurfaceManager& surf_man = SurfaceManager::getInstance();
 
-	surf_man.make_random_scene();
+	//surf_man.make_random_scene();
 	auto usc_tex = make_shared<image_texture>("Texture/usc1.png");
 	auto lam_tex = make_shared<solid_color>(vec3(1.0, 1.0, 1.0));
 	auto material4 = make_shared<metal>(vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f), 0.0);
@@ -114,14 +114,13 @@ int main() {
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 1, 0, 0 };
 	tri1->mat_ptr = material4;
-	//tri1->mat_ptr = material4;
-	tri1->mat_ptr = water_material;
+	//tri1->mat_ptr = water_material;
 	auto tri2 = make_shared<Triangle>(tc, td, tb);
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 1, 0 };
-	//tri2->mat_ptr = material4;
-	tri2->mat_ptr = water_material;
+	tri2->mat_ptr = material4;
+	//tri2->mat_ptr = water_material;
 
 	float texCount = 8;
 	tri1->normap = new std::shared_ptr<texture>[texCount];
