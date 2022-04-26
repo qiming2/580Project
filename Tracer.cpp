@@ -300,7 +300,9 @@ KT::Record KT::Triangle::intersection(const ray& r) const
 	ret.v = ((1.0f - u - v) * m_uv_data[2][1] + u * m_uv_data[0][1] + v * m_uv_data[1][1]);
 	ret.m_color = vec3(ret.u, ret.v, 0.0f);
 	//ret.m_normal = v0v2.cross(v0v1);
-	ret.m_normal = normap->getColor(ret.u, ret.v, hitpoint);
+	for (int i = 0; i < 8; i++) {
+		ret.m_normal += normap[i]->getColor(ret.u, ret.v, hitpoint);
+	}
 	ret.m_normal.normalize();
 	/*ret.m_color = ret.m_normal;*/
 	return ret;

@@ -83,17 +83,13 @@ int main() {
 	auto usc_tex = make_shared<image_texture>("Texture/usc1.png");
 	auto lam_tex = make_shared<solid_color>(vec3(1.0, 1.0, 1.0));
 	auto material4 = make_shared<metal>(vec3(212.0f / 255.0f, 241.0f / 255.0f, 249.0f / 255.0f), 0.0);
+	auto water_material = make_shared<dielectric>(0);
 	std::shared_ptr<texture> water_tex = make_shared<water_texture>();
 	std::shared_ptr<texture> checker = make_shared<checker_texture>(vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9));
 	auto material2 = make_shared<lambertian>(checker);
 	auto material3 = make_shared<lambertian>(usc_tex);
 	surf_man.Add(make_shared<Sphere>(vec3(1, 1, 0), 1.0, material3));
 
-
-	
-
-	vec3* normap = genGersterWaveTexture(vec3(0.5, 0.5, 0), 1000);
-	std::shared_ptr<texture> normap_texture = make_shared<image_texture>(normap, 1000, 1000);
 	
 	/*
 	auto material2 = make_shared<lambertian>(water_tex);
@@ -102,27 +98,38 @@ int main() {
 	
 	
 	//surf_man.Add(make_shared<Sphere>(vec3(4, 1, 0), 1.0, material3));
-	float length = 3;
+	float length = 10;
 	vec3 ta = { -length ,0 ,  length };
 	vec3 tb = { length  , 0,  length };
 	vec3 tc = { -length ,0 , -length };
 						  
 	vec3 td = { length  , 0, -length };
 	auto tri1 = make_shared<Triangle>(tb, ta, tc);
-	tri1->normap = normap_texture;
+	
 	tri1->m_uv_data[0] = { 0, 0, 0 };
 	tri1->m_uv_data[1] = { 0, 1, 0 };
 	tri1->m_uv_data[2] = { 1, 0, 0 };
-	tri1->mat_ptr = material4;
-
-	surf_man.Add(tri1);
+	//tri1->mat_ptr = material4;
+	tri1->mat_ptr = water_material;
 
 	auto tri2 = make_shared<Triangle>(tc, td, tb);
-	tri2->normap = normap_texture;
 	tri2->m_uv_data[0] = { 1, 1, 0 };
 	tri2->m_uv_data[1] = { 1, 0, 0 };
 	tri2->m_uv_data[2] = { 0, 1, 0 };
-	tri2->mat_ptr = material4;
+	//tri2->mat_ptr = material4;
+	tri2->mat_ptr = water_material;
+
+	float texCount = 8;
+	tri1->normap = new std::shared_ptr<texture>[texCount];
+	tri2->normap = new std::shared_ptr<texture>[texCount];
+	for (int i = 0; i < texCount; i++) {
+		vec3* normap = genGersterWaveTexture(vec3(KT::random_double(0,1), KT::random_double(0,1), 0), 100);
+		std::shared_ptr<texture> normap_texture = make_shared<image_texture>(normap, 100, 100);
+		tri1->normap[i] = normap_texture;
+		tri2->normap[i] = normap_texture;
+	}
+
+	surf_man.Add(tri1);
 	surf_man.Add(tri2);
 
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));
