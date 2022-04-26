@@ -126,8 +126,8 @@ int main() {
 		tri2->normap[i] = normap_texture;
 	}
 
-	//surf_man.Add(tri1);
-	//surf_man.Add(tri2);
+	surf_man.Add(tri1);
+	surf_man.Add(tri2);
 
 
 	//surf_man.Add(make_shared<Sphere>(vec3(0, -1000, 0), 1000, make_shared<lambertian>(checker)));

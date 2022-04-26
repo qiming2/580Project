@@ -226,8 +226,8 @@ KT::vec3 image_texture::getColor(float u, float v, const KT::vec3& hitpoint) con
 KT::vec3* genGersterWaveTexture(KT::vec3 windDir, int n)
 {
 	// Use the Texture on a 10m basis
-	float A = KT::random_double(0.03f, 0.05f);
-	float Q = KT::random_double(0.3f, 0.4f);
+	float A = KT::random_double(0.03f, 0.09f);
+	float Q = KT::random_double(0.3f, 0.6f);
 	std::cout << "A: " << A << ", Q: " << Q << std::endl;
 	// The wave direction is determined by wind direction
 	// but have a random angle to the wind direction
